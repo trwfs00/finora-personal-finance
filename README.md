@@ -29,7 +29,7 @@ Personal finance workspace — local-first, private by default.
 | Charts | Recharts |
 | i18n | i18next + react-i18next |
 | Auth | @react-oauth/google |
-| Build | Vite 6, TypeScript 5 |
+| Build | Vite 8, TypeScript 6 |
 | Tests | Vitest, React Testing Library, Playwright |
 
 ## Getting started
