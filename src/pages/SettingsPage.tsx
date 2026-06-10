@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next"
 
 import { CategoryManager } from "../components/CategoryManager"
 import { GoogleDriveSyncPanel } from "../components/GoogleDriveSyncPanel"
+import { GuideCenter } from "../components/help/GuideCenter"
+import { HelpButton } from "../components/help/HelpButton"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
 import { ConfirmDialog } from "../components/ui/confirm-dialog"
@@ -174,11 +176,14 @@ export function SettingsPage() {
 
   return (
     <div className='section-shell px-4 py-6 lg:px-8 lg:py-8'>
-      <div className='border-b border-line pb-6'>
-        <h1 className='page-title'>{t("settings.title")}</h1>
-        <p className='mt-2 max-w-2xl text-sm leading-6 text-muted'>
-          {t("settings.subtitle")}
-        </p>
+      <div className='flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between'>
+        <div>
+          <h1 className='page-title'>{t("settings.title")}</h1>
+          <p className='mt-2 max-w-2xl text-sm leading-6 text-muted'>
+            {t("settings.subtitle")}
+          </p>
+        </div>
+        <HelpButton page="settings" />
       </div>
 
       <div className='grid gap-6 pt-6 xl:grid-cols-[0.8fr_1.2fr]'>
@@ -462,6 +467,8 @@ export function SettingsPage() {
               <CategoryManager />
             </div>
           </div>
+
+          <GuideCenter />
         </section>
       </div>
 

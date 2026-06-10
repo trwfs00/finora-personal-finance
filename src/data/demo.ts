@@ -44,6 +44,18 @@ export function buildDemoData(today = new Date()) {
       createdAt: demoNow,
       updatedAt: demoNow,
     },
+    {
+      id: "demo-acct-spaylater",
+      name: "SPayLater",
+      type: "debt",
+      initialBalance: -3200,
+      creditLimit: 20000,
+      currency: "THB",
+      color: "oklch(0.63 0.19 25)",
+      includeInNetWorth: true,
+      createdAt: demoNow,
+      updatedAt: demoNow,
+    },
   ];
 
   const transactions: Transaction[] = [

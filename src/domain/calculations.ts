@@ -51,6 +51,27 @@ export interface DashboardMetrics {
   insights: InsightData[];
 }
 
+export interface CreditUsage {
+  usedCredit: number;
+  availableCredit?: number;
+  utilization?: number;
+  isOverLimit: boolean;
+}
+
+export function calculateCreditUsage(balance: number, creditLimit?: number): CreditUsage {
+  const usedCredit = Math.max(0, -balance);
+  if (creditLimit === undefined || creditLimit <= 0) {
+    return { usedCredit, availableCredit: undefined, utilization: undefined, isOverLimit: false };
+  }
+  const availableCredit = creditLimit - usedCredit;
+  return {
+    usedCredit,
+    availableCredit,
+    utilization: Math.round((usedCredit / creditLimit) * 10000) / 100,
+    isOverLimit: availableCredit < 0,
+  };
+}
+
 export function getMonthInterval(month: string) {
   const start = startOfMonth(parseISO(`${month}-01`));
   const end = endOfMonth(start);

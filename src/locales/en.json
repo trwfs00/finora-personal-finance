@@ -209,7 +209,14 @@
     "typeEWallet": "E-wallet",
     "typeSavings": "Savings account",
     "typeInvestment": "Investment account",
-    "typeDebt": "Debt account"
+    "typeDebt": "Debt account",
+    "formCreditLimit": "Credit / loan limit",
+    "formCreditLimitHint": "Optional. Enter the total credit or loan limit.",
+    "creditDebtExample": "Example: SPayLater limit 20,000 already used 8,000 → initial balance -8,000, credit limit 20,000. To record a purchase use Expense on this account; to repay use Transfer from bank to this account.",
+    "creditUsed": "Used",
+    "creditLimit": "Limit",
+    "creditAvailable": "Available",
+    "creditUtilization": "{{percent}}% used"
   },
   "settings": {
     "title": "Settings",
@@ -412,5 +419,222 @@
     "shortcutSynced": "Drive synced",
     "shortcutLastSyncedTitle": "Last synced {{date}}",
     "shortcutEnabledTitle": "Google Drive sync is enabled"
+  },
+  "guideUi": {
+    "howToUsePage": "How to use this page",
+    "guideCenter": "Guide center",
+    "recommendedSetup": "Recommended setup",
+    "steps": "How to use it",
+    "warning": "Important",
+    "openGuide": "Open guide",
+    "closeGuide": "Close guide"
+  },
+  "guides": {
+    "fields": {
+      "accountName": "Account name",
+      "accountType": "Account type",
+      "account": "Account",
+      "initialBalance": "Initial balance",
+      "creditLimit": "Credit limit",
+      "transactionType": "Transaction type",
+      "fromAccount": "From account",
+      "toAccount": "To account",
+      "amount": "Amount"
+    },
+    "values": {
+      "debtAccount": "Debt account",
+      "creditCard": "Credit card",
+      "bank": "Bank account",
+      "cash": "Cash",
+      "ewallet": "E-wallet",
+      "expense": "Expense",
+      "income": "Income",
+      "transfer": "Transfer"
+    },
+    "accounts": {
+      "title": "Account setup guide",
+      "intro": "Learn how to set up each account type for accurate tracking.",
+      "cash": {
+        "title": "Cash",
+        "description": "Track physical cash in your wallet or at home.",
+        "step1": "Create an account with type Cash.",
+        "step2": "Set initial balance to the cash you currently have on hand.",
+        "step3": "Record cash purchases as Expense on this account."
+      },
+      "bank": {
+        "title": "Bank account",
+        "description": "Track your bank account balance and transactions.",
+        "step1": "Create an account with type Bank.",
+        "step2": "Set initial balance to your current bank balance.",
+        "step3": "Record purchases as Expense. Receive salary as Income."
+      },
+      "ewallet": {
+        "title": "E-wallet (TrueMoney, Rabbit LINE Pay, etc.)",
+        "description": "Track digital wallet balances.",
+        "step1": "Create an account with type E-wallet.",
+        "step2": "Set initial balance to the current wallet amount.",
+        "step3": "Top-ups: use Transfer from Bank to E-wallet."
+      },
+      "creditCard": {
+        "title": "Credit card",
+        "description": "Track credit card spending and payments.",
+        "step1": "Create an account with type Credit card.",
+        "step2": "Set initial balance to negative outstanding balance, e.g. -5000 if you owe 5,000.",
+        "step3": "Purchases: record as Expense on the credit card account.",
+        "step4": "Payment: record as Transfer from Bank to Credit card.",
+        "warning": "Never record a credit card payment as an Expense — that double-counts your spending."
+      },
+      "spaylater": {
+        "title": "SPayLater / BNPL / Debt account",
+        "description": "Track buy-now-pay-later balances like SPayLater, Aeon, or any personal loan.",
+        "step1": "Create an account with type Debt.",
+        "step2": "If you already owe 8,000, set initial balance to -8000 — it is debt.",
+        "step3": "If you have a credit limit of 20,000, set Credit limit to 20000.",
+        "step4": "Purchases: record as Expense on the SPayLater account.",
+        "step5": "Repayment: record as Transfer from Bank to SPayLater.",
+        "warning": "Do not record repayment as Expense — the spending already happened at purchase time."
+      },
+      "investment": {
+        "title": "Investment account",
+        "description": "Track investments like stocks, mutual funds, or crypto.",
+        "step1": "Create an account with type Investment.",
+        "step2": "Set initial balance to the current portfolio value.",
+        "step3": "Deposits: use Transfer from Bank to Investment.",
+        "step4": "Returns or gains: record as Income on the Investment account."
+      },
+      "netWorth": {
+        "title": "Include in net worth",
+        "description": "Control which accounts count toward your total net worth.",
+        "step1": "Enable for accounts you own: bank, savings, investments, e-wallets.",
+        "step2": "Debt and credit card accounts should also be included — they reduce net worth.",
+        "step3": "Disable for accounts you track on behalf of others."
+      }
+    },
+    "transactions": {
+      "title": "Transaction recording guide",
+      "intro": "Use the right transaction type to avoid double-counting.",
+      "cashPurchase": {
+        "title": "Cash purchase",
+        "description": "Record everyday purchases paid in cash.",
+        "step1": "Type: Expense.",
+        "step2": "Account: select your Cash account.",
+        "step3": "Category: choose the relevant spending category."
+      },
+      "creditPurchase": {
+        "title": "Credit card / SPayLater purchase",
+        "description": "Record purchases made with a credit card or BNPL service.",
+        "step1": "Type: Expense.",
+        "step2": "Account: select the Credit card or SPayLater account.",
+        "step3": "Do NOT record this on the Bank account — the bank has not paid yet."
+      },
+      "creditRepayment": {
+        "title": "Credit card / SPayLater repayment",
+        "description": "Record a payment toward your credit card or BNPL balance.",
+        "step1": "Type: Transfer.",
+        "step2": "From: your Bank account.",
+        "step3": "To: the Credit card or SPayLater account.",
+        "warning": "Do not use Expense for repayment — the expense was recorded when you made the purchase."
+      },
+      "ownTransfer": {
+        "title": "Transfer between own accounts",
+        "description": "Move money between your own accounts without creating a phantom expense.",
+        "step1": "Type: Transfer.",
+        "step2": "From: the source account.",
+        "step3": "To: the destination account.",
+        "step4": "Example: move salary to savings, or top up your e-wallet."
+      },
+      "salaryIncome": {
+        "title": "Salary / income",
+        "description": "Record incoming money to your account.",
+        "step1": "Type: Income.",
+        "step2": "Account: the bank account that receives the salary.",
+        "step3": "Category: Salary or Freelance.",
+        "step4": "Amount: the amount actually received, not the gross salary."
+      },
+      "debtInterestFee": {
+        "title": "Loan interest or fee",
+        "description": "Interest and fees are real expenses, separate from principal repayment.",
+        "step1": "Type: Expense.",
+        "step2": "Account: the debt or credit card account.",
+        "step3": "Category: Interest / Finance charges.",
+        "step4": "Do not combine interest with the principal repayment transfer."
+      }
+    },
+    "budgets": {
+      "title": "Budget guide",
+      "intro": "Budgets help you plan and track monthly spending.",
+      "monthlyBudget": {
+        "title": "Monthly total budget",
+        "description": "Set an overall spending cap for the entire month.",
+        "step1": "Open Budgets, select the month.",
+        "step2": "Enter the overall budget amount.",
+        "step3": "Finora shows your spending vs. budget in real time.",
+        "step4": "Tip: start with a round number and adjust after one month."
+      },
+      "categoryBudget": {
+        "title": "Category budget",
+        "description": "Allocate a specific amount per spending category.",
+        "step1": "Add a category budget below the overall budget form.",
+        "step2": "Pick a category and enter the limit.",
+        "step3": "The bar turns red when you exceed the category limit.",
+        "step4": "Category budgets work independently from the overall budget."
+      },
+      "rolloverBudget": {
+        "title": "Rollover budget",
+        "description": "Carry unused budget from the previous month forward.",
+        "step1": "Enable the rollover toggle on the monthly budget.",
+        "step2": "Unused amount from last month adds to this month's cap.",
+        "step3": "Useful for irregular expenses like car maintenance or travel."
+      },
+      "overBudget": {
+        "title": "Over-budget state",
+        "description": "Know when you have exceeded your spending plan.",
+        "step1": "The budget bar turns red and shows Over when spending exceeds the limit.",
+        "step2": "Finora still records all transactions — no spending is blocked.",
+        "step3": "Review top categories on the dashboard to find where overspending happened."
+      }
+    },
+    "settings": {
+      "title": "Backup, sync, and data guide",
+      "intro": "Understand how Finora stores, backs up, and syncs your data.",
+      "localFirst": {
+        "title": "Local-first data",
+        "description": "Finora stores all finance data in your browser's IndexedDB — no account required.",
+        "step1": "Data stays on this device by default.",
+        "step2": "Clearing browser data or switching browsers loses local data.",
+        "step3": "Export a JSON backup regularly as a safety measure."
+      },
+      "jsonBackup": {
+        "title": "JSON backup (export)",
+        "description": "Export a complete backup of all your data as a JSON file.",
+        "step1": "Settings → Backup and restore → Export JSON.",
+        "step2": "Save the file somewhere safe (cloud folder, external drive, etc.).",
+        "step3": "The file includes all transactions, accounts, budgets, and settings."
+      },
+      "jsonRestore": {
+        "title": "JSON restore",
+        "description": "Restore a previous backup from a saved JSON file.",
+        "step1": "Settings → Backup and restore → Restore JSON.",
+        "step2": "Select your backup file.",
+        "step3": "Confirm the restore — this replaces all current local data.",
+        "warning": "Restore replaces everything in your local browser. Export a backup first if you want to keep your current data."
+      },
+      "googleDriveSync": {
+        "title": "Google Drive sync",
+        "description": "Automatically sync your data to Google Drive's hidden app data.",
+        "step1": "Settings → Google Drive sync → Connect Google Drive.",
+        "step2": "Finora stores a backup in your Drive's hidden app data (not visible in Drive Files).",
+        "step3": "Sync runs automatically when you open the app.",
+        "step4": "You can trigger a manual sync with the Sync now button."
+      },
+      "syncConflict": {
+        "title": "Sync conflict resolution",
+        "description": "When this device and Drive both have changes, you must choose which to keep.",
+        "step1": "Use Drive data — replaces this device's data with the Drive backup.",
+        "step2": "Keep this device — uploads local data and overwrites the Drive backup.",
+        "step3": "Disconnecting stops sync, but your local data stays on this device.",
+        "warning": "Always export a JSON backup before resolving a conflict if you are unsure which copy is more up to date."
+      }
+    }
   }
 }

@@ -47,6 +47,7 @@ export interface Account {
   name: string;
   type: AccountType;
   initialBalance: number;
+  creditLimit?: number;
   currency: string;
   color?: string;
   includeInNetWorth: boolean;

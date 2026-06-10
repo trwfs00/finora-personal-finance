@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BudgetEditor } from "../components/BudgetEditor";
+import { HelpButton } from "../components/help/HelpButton";
 import { Badge } from "../components/ui/badge";
 import { MonthPicker } from "../components/ui/date-picker";
 import { EmptyState } from "../components/ui/empty-state";
@@ -43,12 +44,15 @@ export function BudgetsPage() {
             {t("budgets.subtitle")}
           </p>
         </div>
-        <MonthPicker
-          ariaLabel={t("budgets.title")}
-          className="w-40"
-          onChange={setMonth}
-          value={month}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <HelpButton page="budgets" />
+          <MonthPicker
+            ariaLabel={t("budgets.title")}
+            className="w-40"
+            onChange={setMonth}
+            value={month}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 pt-6 xl:grid-cols-[1fr_0.9fr]">
