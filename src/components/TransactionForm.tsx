@@ -1,0 +1,424 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
+
+import type { AccountType, Transaction } from "../domain/types";
+import { useFinanceStore } from "../store/finance-store";
+import { Button } from "./ui/button";
+import { DatePicker } from "./ui/date-picker";
+import { Field, Input, Textarea } from "./ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
+const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
+  cash:        "oklch(0.60 0.14 145)",
+  bank:        "oklch(0.56 0.15 255)",
+  credit_card: "oklch(0.60 0.13 55)",
+  e_wallet:    "oklch(0.55 0.16 305)",
+  savings:     "oklch(0.57 0.13 200)",
+  investment:  "oklch(0.52 0.15 255)",
+  debt:        "oklch(0.57 0.16 30)",
+};
+
+const PAYMENT_METHODS = [
+  "cash",
+  "card",
+  "bank_transfer",
+  "e_wallet",
+  "qr_promptpay",
+  "cheque",
+] as const;
+
+type FormValues = {
+  type: "income" | "expense" | "transfer";
+  amount: number;
+  date: string;
+  categoryId?: string;
+  accountId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  note?: string;
+  tagsText?: string;
+  paymentMethod?: string;
+  attachmentNote?: string;
+};
+
+interface TransactionFormProps {
+  transaction?: Transaction;
+  onSaved: () => void;
+}
+
+export function TransactionForm({ transaction, onSaved }: TransactionFormProps) {
+  const { t } = useTranslation();
+  const categories = useFinanceStore((state) => state.categories);
+  const accounts = useFinanceStore((state) => state.accounts);
+  const addTransaction = useFinanceStore((state) => state.addTransaction);
+  const updateTransaction = useFinanceStore((state) => state.updateTransaction);
+  const loading = useFinanceStore((state) => state.loading);
+
+  const formSchema = useMemo(
+    () =>
+      z
+        .object({
+          type: z.enum(["income", "expense", "transfer"]),
+          amount: z.coerce.number().positive(t("form.amountError")),
+          date: z.string().min(1, t("form.dateError")),
+          categoryId: z.string().optional(),
+          accountId: z.string().optional(),
+          fromAccountId: z.string().optional(),
+          toAccountId: z.string().optional(),
+          note: z.string().optional(),
+          tagsText: z.string().optional(),
+          paymentMethod: z.string().optional(),
+          attachmentNote: z.string().optional(),
+        })
+        .superRefine((value, context) => {
+          if (value.type === "income" || value.type === "expense") {
+            if (!value.categoryId) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["categoryId"],
+                message: t("form.categoryError"),
+              });
+            }
+            if (!value.accountId) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["accountId"],
+                message: t("form.accountError"),
+              });
+            }
+          }
+
+          if (value.type === "transfer") {
+            if (!value.fromAccountId) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["fromAccountId"],
+                message: t("form.fromAccountError"),
+              });
+            }
+            if (!value.toAccountId) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["toAccountId"],
+                message: t("form.toAccountError"),
+              });
+            }
+            if (
+              value.fromAccountId &&
+              value.toAccountId &&
+              value.fromAccountId === value.toAccountId
+            ) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["toAccountId"],
+                message: t("form.transferDiffError"),
+              });
+            }
+          }
+        }),
+    [t],
+  );
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      type: transaction?.type ?? "expense",
+      amount: transaction?.amount ?? 0,
+      date: transaction?.date ?? format(new Date(), "yyyy-MM-dd"),
+      categoryId: transaction?.categoryId ?? "",
+      accountId: transaction?.accountId ?? "",
+      fromAccountId: transaction?.fromAccountId ?? "",
+      toAccountId: transaction?.toAccountId ?? "",
+      note: transaction?.note ?? "",
+      tagsText: transaction?.tags?.join(", ") ?? "",
+      paymentMethod: transaction?.paymentMethod ?? "",
+      attachmentNote: transaction?.attachmentNote ?? "",
+    },
+  });
+
+  const type = form.watch("type");
+  const selectedCategoryId = form.watch("categoryId");
+  const selectedAccountId = form.watch("accountId");
+  const selectedFromAccountId = form.watch("fromAccountId");
+  const selectedToAccountId = form.watch("toAccountId");
+  const selectedDate = form.watch("date");
+  const selectedPaymentMethod = form.watch("paymentMethod");
+
+  const categoryOptions = useMemo(
+    () =>
+      categories.filter(
+        (category) =>
+          category.isActive &&
+          category.type === (type === "income" ? "income" : "expense"),
+      ),
+    [categories, type],
+  );
+
+  async function onSubmit(values: FormValues) {
+    const normalized = {
+      type: values.type,
+      amount: values.amount,
+      date: values.date,
+      categoryId:
+        values.type === "transfer" ? undefined : emptyToUndefined(values.categoryId),
+      accountId:
+        values.type === "transfer" ? undefined : emptyToUndefined(values.accountId),
+      fromAccountId:
+        values.type === "transfer" ? emptyToUndefined(values.fromAccountId) : undefined,
+      toAccountId:
+        values.type === "transfer" ? emptyToUndefined(values.toAccountId) : undefined,
+      note: emptyToUndefined(values.note?.trim()),
+      tags: values.tagsText
+        ?.split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      paymentMethod: emptyToUndefined(values.paymentMethod?.trim()),
+      attachmentNote: emptyToUndefined(values.attachmentNote?.trim()),
+    };
+
+    if (transaction) {
+      await updateTransaction(transaction.id, normalized);
+    } else {
+      await addTransaction(normalized);
+    }
+    onSaved();
+  }
+
+  return (
+    <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label={t("form.type")} htmlFor="type" error={form.formState.errors.type?.message}>
+          <Select
+            onValueChange={(value) =>
+              form.setValue("type", value as FormValues["type"], { shouldValidate: true })
+            }
+            value={type}
+          >
+            <SelectTrigger id="type">
+              <SelectValue placeholder={t("form.selectType")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="expense">{t("common.expense")}</SelectItem>
+              <SelectItem value="income">{t("common.income")}</SelectItem>
+              <SelectItem value="transfer">{t("common.transfer")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label={t("form.amount")} htmlFor="amount" error={form.formState.errors.amount?.message}>
+          <Input id="amount" min="0" step="0.01" type="number" {...form.register("amount")} />
+        </Field>
+        <Field label={t("form.date")} htmlFor="date" error={form.formState.errors.date?.message}>
+          <DatePicker
+            ariaLabel={t("form.date")}
+            id="date"
+            onChange={(value) => form.setValue("date", value, { shouldValidate: true })}
+            value={selectedDate}
+          />
+        </Field>
+      </div>
+
+      {type === "transfer" ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label={t("form.fromAccount")}
+            htmlFor="fromAccountId"
+            error={form.formState.errors.fromAccountId?.message}
+          >
+            <Select
+              onValueChange={(value) =>
+                form.setValue("fromAccountId", value, { shouldValidate: true })
+              }
+              value={selectedFromAccountId}
+            >
+              <SelectTrigger id="fromAccountId">
+                <SelectValue placeholder={t("form.selectAccount")} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id} textValue={account.name}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          background:
+                            account.color ?? ACCOUNT_TYPE_COLORS[account.type],
+                        }}
+                      />
+                      {account.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field
+            label={t("form.toAccount")}
+            htmlFor="toAccountId"
+            error={form.formState.errors.toAccountId?.message}
+          >
+            <Select
+              onValueChange={(value) =>
+                form.setValue("toAccountId", value, { shouldValidate: true })
+              }
+              value={selectedToAccountId}
+            >
+              <SelectTrigger id="toAccountId">
+                <SelectValue placeholder={t("form.selectAccount")} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id} textValue={account.name}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          background:
+                            account.color ?? ACCOUNT_TYPE_COLORS[account.type],
+                        }}
+                      />
+                      {account.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label={t("form.category")}
+            htmlFor="categoryId"
+            error={form.formState.errors.categoryId?.message}
+          >
+            <Select
+              onValueChange={(value) =>
+                form.setValue("categoryId", value, { shouldValidate: true })
+              }
+              value={selectedCategoryId}
+            >
+              <SelectTrigger id="categoryId">
+                <SelectValue placeholder={t("form.category")} />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryOptions.map((category) => (
+                  <SelectItem key={category.id} value={category.id} textValue={category.name}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          background: category.color ?? "oklch(var(--muted))",
+                        }}
+                      />
+                      {category.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field
+            label={t("form.account")}
+            htmlFor="accountId"
+            error={form.formState.errors.accountId?.message}
+          >
+            <Select
+              onValueChange={(value) =>
+                form.setValue("accountId", value, { shouldValidate: true })
+              }
+              value={selectedAccountId}
+            >
+              <SelectTrigger id="accountId">
+                <SelectValue placeholder={t("form.selectAccount")} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id} textValue={account.name}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          background:
+                            account.color ?? ACCOUNT_TYPE_COLORS[account.type],
+                        }}
+                      />
+                      {account.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t("form.paymentMethod")} htmlFor="paymentMethod">
+          <Select
+            onValueChange={(value) =>
+              form.setValue("paymentMethod", value === "__none__" ? "" : value)
+            }
+            value={selectedPaymentMethod || "__none__"}
+          >
+            <SelectTrigger id="paymentMethod">
+              <SelectValue placeholder={t("form.paymentMethodPlaceholder")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">
+                <span className="text-muted">{t("form.paymentMethodPlaceholder")}</span>
+              </SelectItem>
+              {PAYMENT_METHODS.map((pm) => (
+                <SelectItem key={pm} value={pm}>
+                  {t(`form.pm_${pm}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label={t("form.tags")} htmlFor="tagsText" hint={t("form.tagsHint")}>
+          <Input
+            id="tagsText"
+            placeholder={t("form.tagsPlaceholder")}
+            {...form.register("tagsText")}
+          />
+        </Field>
+      </div>
+
+      <Field label={t("form.note")} htmlFor="note">
+        <Textarea id="note" placeholder={t("form.notePlaceholder")} {...form.register("note")} />
+      </Field>
+
+      <Field
+        label={t("form.receiptRef")}
+        htmlFor="attachmentNote"
+        hint={t("form.receiptRefHint")}
+      >
+        <Input
+          id="attachmentNote"
+          placeholder={t("form.receiptRefPlaceholder")}
+          {...form.register("attachmentNote")}
+        />
+      </Field>
+
+      <div className="flex justify-end gap-2">
+        <Button disabled={loading} type="submit" variant="primary">
+          {transaction ? t("form.saveTx") : t("form.addTx")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function emptyToUndefined(value?: string) {
+  return value && value.length > 0 ? value : undefined;
+}

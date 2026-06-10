@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg:        0.9722 0.0034 247.86;
+  --surface:   1 0 0;
+  --surface-2: 0.965 0.004 250;
+  --ink:       0.13 0.010 250;
+  --muted:     0.42 0.014 250;
+  --line:      0.912 0.004 250;
+  --primary:   0.606 0.138 133;
+  --accent:    0.65 0.12 185;
+  --success:   0.606 0.138 133;
+  --warning:   0.70 0.13 75;
+  --danger:    0.6028 0.2091 23.51;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg:        0.185 0.007 250;
+  --surface:   0.235 0.008 250;
+  --surface-2: 0.285 0.009 250;
+  --ink:       0.875 0.005 250;
+  --muted:     0.62 0.012 250;
+  --line:      0.33 0.009 250;
+  --primary:   0.747 0.149 133;
+  --accent:    0.72 0.10 185;
+  --success:   0.75 0.15 133;
+  --warning:   0.75 0.13 75;
+  --danger:    0.67 0.15 25;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: oklch(var(--bg));
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: oklch(var(--bg));
+  color: oklch(var(--ink));
+  font-family:
+    "Google Sans",
+    "Sarabun",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid oklch(var(--primary));
+  outline-offset: 2px;
+}
+
+::selection {
+  background: oklch(var(--primary) / 0.15);
+}
+
+@layer components {
+  .panel {
+    border: 1px solid oklch(var(--line));
+    border-radius: 0.75rem;
+    background: oklch(var(--surface));
+    box-shadow: 0 2px 6px oklch(var(--ink) / 0.02), 0 4px 10px oklch(var(--ink) / 0.01);
+  }
+
+  .section-shell {
+    width: min(100%, 1200px);
+    margin-inline: auto;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .page-header {
+    border-bottom: 1px solid oklch(var(--line));
+    padding-bottom: 1.75rem;
+    margin-bottom: 0;
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: oklch(var(--ink));
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
