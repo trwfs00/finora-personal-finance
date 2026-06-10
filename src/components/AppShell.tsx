@@ -21,6 +21,7 @@ import { useShortcutKey } from "../hooks/useShortcutKey";
 import i18n from "../i18n";
 import { cn } from "../lib/utils";
 import { useFinanceStore } from "../store/finance-store";
+import { GoogleDriveSyncShortcut } from "./GoogleDriveSyncShortcut";
 import { OnboardingModal } from "./OnboardingModal";
 import { SpotlightSearch } from "./SpotlightSearch";
 import { TransactionForm } from "./TransactionForm";
@@ -215,6 +216,7 @@ export function AppShell() {
             Finora
           </NavLink>
           <div className="flex items-center gap-1">
+            <GoogleDriveSyncShortcut compact />
             <QuickSettings />
             <button
               aria-label={t("common.search")}
@@ -254,6 +256,7 @@ export function AppShell() {
           </button>
 
           <div className="flex items-center gap-1">
+            <GoogleDriveSyncShortcut />
             <QuickSettings />
             <UserAvatar />
           </div>

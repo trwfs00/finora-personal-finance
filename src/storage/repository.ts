@@ -1,3 +1,4 @@
+import { createBackup } from "../domain/backup";
 import { DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES, DEFAULT_SETTINGS, SCHEMA_VERSION } from "../domain/defaults";
 import {
   accountSchema,
@@ -15,6 +16,7 @@ import type {
   CategoryDraft,
   FinanceData,
   StoredData,
+  SyncMetadata,
   Transaction,
   TransactionDraft,
 } from "../domain/types";
@@ -25,6 +27,38 @@ const APP_SETTINGS_ID = "app";
 const DEMO_LOADED_KEY = "demoLoaded";
 const INITIALIZED_KEY = "initialized";
 const SCHEMA_VERSION_KEY = "schemaVersion";
+const SYNC_METADATA_KEY = "googleDriveSync";
+export const SYNC_METADATA_CHANGED_EVENT = "finora:sync-metadata-changed";
+
+function notifySyncMetadataChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(SYNC_METADATA_CHANGED_EVENT));
+  }
+}
+
+function createDefaultSyncMetadata(): SyncMetadata {
+  return {
+    provider: "google-drive",
+    enabled: false,
+    localRevision: 0,
+    deviceId: getOrCreateDeviceId(),
+    status: "idle",
+    hasPendingLocalChanges: false,
+  };
+}
+
+function getOrCreateDeviceId() {
+  try {
+    const key = "finora-device-id";
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const next = crypto.randomUUID();
+    localStorage.setItem(key, next);
+    return next;
+  } catch {
+    return "test-device";
+  }
+}
 
 export async function initializeStorage() {
   await db.transaction(
@@ -90,6 +124,53 @@ export async function getFinanceData(): Promise<FinanceData> {
   };
 }
 
+export async function getBackupData() {
+  const data = await getFinanceData();
+  return createBackup({
+    transactions: data.transactions,
+    categories: data.categories,
+    accounts: data.accounts,
+    budgets: data.budgets,
+    recurringTransactions: data.recurringTransactions,
+    settings: data.settings,
+  });
+}
+
+export async function getSyncMetadata(): Promise<SyncMetadata> {
+  await initializeStorage();
+  const record = await db.metadata.get(SYNC_METADATA_KEY);
+  return {
+    ...createDefaultSyncMetadata(),
+    ...(record?.value && typeof record.value === "object" ? (record.value as Partial<SyncMetadata>) : {}),
+  };
+}
+
+export async function updateSyncMetadata(partial: Partial<SyncMetadata>) {
+  const current = await getSyncMetadata();
+  const next: SyncMetadata = { ...current, ...partial, provider: "google-drive" };
+  await db.metadata.put({ key: SYNC_METADATA_KEY, value: next });
+  notifySyncMetadataChanged();
+  return next;
+}
+
+export async function clearSyncMetadata() {
+  await db.metadata.delete(SYNC_METADATA_KEY);
+  notifySyncMetadataChanged();
+}
+
+async function bumpLocalRevision() {
+  const current = await getSyncMetadata();
+  if (!current.enabled && current.localRevision === 0) {
+    await updateSyncMetadata({ localRevision: 1, hasPendingLocalChanges: true });
+    return;
+  }
+  await updateSyncMetadata({
+    localRevision: current.localRevision + 1,
+    hasPendingLocalChanges: true,
+    status: current.status === "synced" ? "idle" : current.status,
+  });
+}
+
 export async function addTransaction(draft: TransactionDraft) {
   const now = new Date().toISOString();
   const transaction: Transaction = transactionSchema.parse({
@@ -99,6 +180,7 @@ export async function addTransaction(draft: TransactionDraft) {
     updatedAt: now,
   });
   await db.transactions.add(transaction);
+  await bumpLocalRevision();
   return transaction;
 }
 
@@ -114,11 +196,13 @@ export async function updateTransaction(id: string, draft: TransactionDraft) {
     updatedAt: new Date().toISOString(),
   });
   await db.transactions.put(transaction);
+  await bumpLocalRevision();
   return transaction;
 }
 
 export async function deleteTransaction(id: string) {
   await db.transactions.delete(id);
+  await bumpLocalRevision();
 }
 
 export async function addAccount(draft: AccountDraft) {
@@ -134,6 +218,7 @@ export async function addAccount(draft: AccountDraft) {
     updatedAt: now,
   });
   await db.accounts.add(account);
+  await bumpLocalRevision();
   return account;
 }
 
@@ -153,6 +238,7 @@ export async function updateAccount(id: string, draft: AccountDraft) {
     updatedAt: new Date().toISOString(),
   });
   await db.accounts.put(account);
+  await bumpLocalRevision();
   return account;
 }
 
@@ -169,6 +255,7 @@ export async function deleteAccount(id: string) {
     throw new Error("Delete transactions connected to this account first");
   }
   await db.accounts.delete(id);
+  await bumpLocalRevision();
 }
 
 export async function addCategory(draft: CategoryDraft) {
@@ -183,6 +270,7 @@ export async function addCategory(draft: CategoryDraft) {
     throw new Error("Category names must be unique within each type");
   }
   await db.categories.add(category);
+  await bumpLocalRevision();
   return category;
 }
 
@@ -202,6 +290,7 @@ export async function updateCategory(id: string, draft: CategoryDraft) {
     throw new Error("Category names must be unique within each type");
   }
   await db.categories.put(category);
+  await bumpLocalRevision();
   return category;
 }
 
@@ -209,6 +298,7 @@ export async function deleteCategory(id: string) {
   const category = await db.categories.get(id);
   if (category?.isDefault) {
     await db.categories.update(id, { isActive: false });
+    await bumpLocalRevision();
     return;
   }
   const relatedTransactions = await db.transactions
@@ -218,6 +308,7 @@ export async function deleteCategory(id: string) {
     throw new Error("Delete transactions connected to this category first");
   }
   await db.categories.delete(id);
+  await bumpLocalRevision();
 }
 
 export async function upsertBudget(draft: BudgetDraft) {
@@ -230,16 +321,19 @@ export async function upsertBudget(draft: BudgetDraft) {
     updatedAt: now,
   });
   await db.budgets.put(budget);
+  await bumpLocalRevision();
   return budget;
 }
 
 export async function deleteBudget(id: string) {
   await db.budgets.delete(id);
+  await bumpLocalRevision();
 }
 
 export async function updateSettings(settings: AppSettings) {
   const value = settingsSchema.parse(settings);
   await db.settings.put({ id: APP_SETTINGS_ID, value });
+  await bumpLocalRevision();
   return value;
 }
 
@@ -274,6 +368,7 @@ export async function replaceAllData(data: StoredData) {
       await db.metadata.put({ key: DEMO_LOADED_KEY, value: false });
     },
   );
+  await bumpLocalRevision();
 }
 
 export async function clearAllData() {
@@ -328,6 +423,7 @@ export async function removeDemoRecords() {
       await db.metadata.put({ key: DEMO_LOADED_KEY, value: false });
     },
   );
+  await bumpLocalRevision();
 }
 
 export async function loadDemoDataset(data: Omit<StoredData, "schemaVersion" | "settings">) {

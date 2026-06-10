@@ -93,6 +93,34 @@ export interface AppSettings {
   backupReminderFrequency: "weekly" | "monthly";
 }
 
+export type SyncStatus =
+  | "idle"
+  | "syncing"
+  | "synced"
+  | "paused"
+  | "offline"
+  | "tokenExpired"
+  | "error"
+  | "conflict";
+
+export interface SyncMetadata {
+  provider: "google-drive";
+  enabled: boolean;
+  googleUserEmail?: string;
+  remoteFileId?: string;
+  remoteModifiedTime?: string;
+  lastSyncAt?: string;
+  lastUploadAt?: string;
+  lastDownloadAt?: string;
+  lastLocalHash?: string;
+  lastRemoteHash?: string;
+  localRevision: number;
+  deviceId: string;
+  status: SyncStatus;
+  lastError?: string;
+  hasPendingLocalChanges: boolean;
+}
+
 export interface StoredData {
   schemaVersion: number;
   transactions: Transaction[];

@@ -6,10 +6,11 @@ import {
   Trash2,
   Upload,
 } from "lucide-react"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { CategoryManager } from "../components/CategoryManager"
+import { GoogleDriveSyncPanel } from "../components/GoogleDriveSyncPanel"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
 import { ConfirmDialog } from "../components/ui/confirm-dialog"
@@ -87,6 +88,16 @@ export function SettingsPage() {
       k => draft[k] !== settings[k],
     )
   }, [draft, draftLang, settings])
+
+  useEffect(() => {
+    if (window.location.hash !== "#google-drive-sync") return
+    requestAnimationFrame(() => {
+      document.getElementById("google-drive-sync")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    })
+  }, [])
 
   function exportJson() {
     const backup = createBackup({
@@ -358,6 +369,10 @@ export function SettingsPage() {
         </section>
 
         <section className='space-y-6'>
+          <div id='google-drive-sync' className='scroll-mt-20'>
+            <GoogleDriveSyncPanel />
+          </div>
+
           <div className='panel p-5'>
             <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
               <div>

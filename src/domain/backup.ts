@@ -34,7 +34,36 @@ export function createBackup(input: {
   };
 }
 
-export function parseBackup(json: string): StoredData {
+export async function hashBackup(backup: StoredData | BackupData) {
+  const payload = stableStringify(backup);
+  const data = new TextEncoder().encode(payload);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(sortKeys(value));
+}
+
+function sortKeys(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortKeys);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, sortKeys(item)]),
+    );
+  }
+
+  return value;
+}
+
+export function parseBackupData(json: string): BackupData {
   const parsed = JSON.parse(json) as unknown;
   const result = backupSchema.safeParse(parsed);
 
@@ -44,12 +73,27 @@ export function parseBackup(json: string): StoredData {
 
   return {
     schemaVersion: result.data.schemaVersion,
+    exportedAt: result.data.exportedAt,
+    appName: "Finora",
     transactions: result.data.transactions,
     categories: result.data.categories,
     accounts: result.data.accounts,
     budgets: result.data.budgets,
     recurringTransactions: result.data.recurringTransactions,
     settings: result.data.settings,
+  };
+}
+
+export function parseBackup(json: string): StoredData {
+  const result = parseBackupData(json);
+  return {
+    schemaVersion: result.schemaVersion,
+    transactions: result.transactions,
+    categories: result.categories,
+    accounts: result.accounts,
+    budgets: result.budgets,
+    recurringTransactions: result.recurringTransactions,
+    settings: result.settings,
   };
 }
 
