@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { AccountForm } from "../components/AccountForm";
+import { HelpButton } from "../components/help/HelpButton";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { ConfirmDialog } from "../components/ui/confirm-dialog";
@@ -116,19 +117,25 @@ export function AccountsPage() {
             {t("accounts.subtitle")}
           </p>
         </div>
-        <Button onClick={openNew} variant="primary">
-          <Plus aria-hidden className="h-4 w-4" />
-          {t("accounts.addAccount")}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <HelpButton page="accounts" />
+          <Button onClick={openNew} variant="primary">
+            <Plus aria-hidden className="h-4 w-4" />
+            {t("accounts.addAccount")}
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6">
         {accounts.length === 0 ? (
           <EmptyState
             action={
-              <Button onClick={openNew} variant="primary">
-                {t("accounts.addAccount")}
-              </Button>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button onClick={openNew} variant="primary">
+                  {t("accounts.addAccount")}
+                </Button>
+                <HelpButton page="accounts" />
+              </div>
             }
             description={t("accounts.emptyDesc")}
             title={t("accounts.emptyTitle")}
