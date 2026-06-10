@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { TransactionForm } from "../components/TransactionForm";
+import { HelpButton } from "../components/help/HelpButton";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { ConfirmDialog } from "../components/ui/confirm-dialog";
@@ -167,6 +168,7 @@ export function TransactionsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <HelpButton page="transactions" />
           <Button onClick={exportCsv} variant="secondary">
             <Upload aria-hidden className="h-4 w-4" />
             {t("transactions.exportCsv")}
