@@ -23,6 +23,7 @@ type AccountFormValues = {
   name: string;
   type: "cash" | "bank" | "credit_card" | "e_wallet" | "savings" | "investment" | "debt";
   initialBalance: number;
+  creditLimit?: number | "";
   currency: string;
   color?: string;
   includeInNetWorth: boolean;
@@ -45,6 +46,10 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
         name: z.string().trim().min(1, t("accounts.formNameError")),
         type: z.enum(["cash", "bank", "credit_card", "e_wallet", "savings", "investment", "debt"]),
         initialBalance: z.coerce.number(),
+        creditLimit: z
+          .union([z.literal(""), z.coerce.number().nonnegative()])
+          .optional()
+          .transform((v): number | undefined => (v === "" || v === undefined ? undefined : v)),
         currency: z.string().trim().min(1),
         color: z.string().optional(),
         includeInNetWorth: z.boolean(),
@@ -58,6 +63,7 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
       name: account?.name ?? "",
       type: account?.type ?? "bank",
       initialBalance: account?.initialBalance ?? 0,
+      creditLimit: account?.creditLimit,
       currency: account?.currency ?? "THB",
       color: account?.color ?? CATEGORY_SWATCHES[0],
       includeInNetWorth: account?.includeInNetWorth ?? true,
@@ -66,12 +72,17 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
 
   const selectedType = form.watch("type");
   const selectedColor = form.watch("color") ?? CATEGORY_SWATCHES[0];
+  const isCreditAccount = selectedType === "credit_card" || selectedType === "debt";
 
   async function onSubmit(values: AccountFormValues) {
+    const payload = {
+      ...values,
+      creditLimit: isCreditAccount && typeof values.creditLimit === "number" ? values.creditLimit : undefined,
+    };
     if (account) {
-      await updateAccount(account.id, values);
+      await updateAccount(account.id, payload);
     } else {
-      await addAccount(values);
+      await addAccount(payload);
     }
     onSaved();
   }
@@ -121,6 +132,28 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
           />
         </Field>
       </div>
+
+      {isCreditAccount ? (
+        <>
+          <Field
+            error={form.formState.errors.creditLimit?.message}
+            hint={t("accounts.formCreditLimitHint")}
+            htmlFor="credit-limit"
+            label={t("accounts.formCreditLimit")}
+          >
+            <Input
+              id="credit-limit"
+              min="0"
+              step="1"
+              type="number"
+              {...form.register("creditLimit")}
+            />
+          </Field>
+          <p className="rounded-xl border border-line bg-surface-2 p-3 text-xs leading-5 text-muted">
+            {t("accounts.creditDebtExample")}
+          </p>
+        </>
+      ) : null}
 
       <Field label={t("accounts.formCurrency")} htmlFor="account-currency">
         <Input id="account-currency" maxLength={3} {...form.register("currency")} />

@@ -13,6 +13,26 @@ const baseInput = {
 };
 
 describe("backup helpers", () => {
+  it("preserves account credit limit through backup round-trip", () => {
+    const backup = createBackup({
+      ...baseInput,
+      accounts: [
+        {
+          id: "acct-spaylater",
+          name: "SPayLater",
+          type: "debt",
+          initialBalance: -8000,
+          creditLimit: 20000,
+          currency: "THB",
+          includeInNetWorth: true,
+          createdAt: "2026-06-01T00:00:00.000Z",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ],
+    });
+    expect(parseBackup(JSON.stringify(backup)).accounts[0]?.creditLimit).toBe(20000);
+  });
+
   it("hashes equivalent backup content deterministically", async () => {
     const first = createBackup(baseInput);
     const second = { ...createBackup(baseInput), exportedAt: first.exportedAt };
