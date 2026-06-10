@@ -209,7 +209,14 @@
     "typeEWallet": "E-wallet",
     "typeSavings": "Savings account",
     "typeInvestment": "Investment account",
-    "typeDebt": "Debt account"
+    "typeDebt": "Debt account",
+    "formCreditLimit": "Credit / loan limit",
+    "formCreditLimitHint": "Optional. Enter the total credit or loan limit.",
+    "creditDebtExample": "Example: SPayLater limit 20,000 already used 8,000 → initial balance -8,000, credit limit 20,000. To record a purchase use Expense on this account; to repay use Transfer from bank to this account.",
+    "creditUsed": "Used",
+    "creditLimit": "Limit",
+    "creditAvailable": "Available",
+    "creditUtilization": "{{percent}}% used"
   },
   "settings": {
     "title": "Settings",

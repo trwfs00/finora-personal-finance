@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from "./defaults";
 import {
   calculateAccountBalance,
   calculateBudgetUsage,
+  calculateCreditUsage,
   calculateDashboardMetrics,
   calculateProjectedSpending,
   calculateSavingsRate,
@@ -80,6 +81,35 @@ const budgets: Budget[] = [
     updatedAt: "2026-06-01T00:00:00.000Z",
   },
 ];
+
+describe("credit usage", () => {
+  it("derives credit usage from a negative account balance", () => {
+    expect(calculateCreditUsage(-8000, 20000)).toEqual({
+      usedCredit: 8000,
+      availableCredit: 12000,
+      utilization: 40,
+      isOverLimit: false,
+    });
+  });
+
+  it("marks accounts as over limit when used credit exceeds limit", () => {
+    expect(calculateCreditUsage(-22000, 20000)).toEqual({
+      usedCredit: 22000,
+      availableCredit: -2000,
+      utilization: 110,
+      isOverLimit: true,
+    });
+  });
+
+  it("returns zero utilization when no limit is set", () => {
+    expect(calculateCreditUsage(-8000, undefined)).toEqual({
+      usedCredit: 8000,
+      availableCredit: undefined,
+      utilization: undefined,
+      isOverLimit: false,
+    });
+  });
+});
 
 describe("finance calculations", () => {
   it("calculates account balances with income, expenses, and transfers", () => {

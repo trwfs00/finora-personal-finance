@@ -114,6 +114,7 @@ export const accountSchema = z.object({
   name: z.string().trim().min(1, "Account name is required"),
   type: accountTypeSchema,
   initialBalance: z.coerce.number(),
+  creditLimit: z.coerce.number().nonnegative().optional(),
   currency: z.string().min(1),
   color: z.string().optional(),
   includeInNetWorth: z.boolean(),

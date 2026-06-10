@@ -8,9 +8,10 @@ import { Button } from "../components/ui/button";
 import { ConfirmDialog } from "../components/ui/confirm-dialog";
 import { Dialog } from "../components/ui/dialog";
 import { EmptyState } from "../components/ui/empty-state";
-import { calculateAccountBalance } from "../domain/calculations";
-import type { Account } from "../domain/types";
+import { calculateAccountBalance, calculateCreditUsage } from "../domain/calculations";
+import type { Account, AppSettings } from "../domain/types";
 import { formatCurrency } from "../lib/format";
+import { cn } from "../lib/utils";
 import { useFinanceStore } from "../store/finance-store";
 
 function accountTypeLabel(type: Account["type"], t: ReturnType<typeof useTranslation>["t"]): string {
@@ -24,6 +25,56 @@ function accountTypeLabel(type: Account["type"], t: ReturnType<typeof useTransla
     debt: t("accounts.typeDebt"),
   };
   return map[type] ?? type;
+}
+
+function CreditPanel({
+  balance,
+  creditLimit,
+  account,
+  settings,
+  t,
+}: {
+  balance: number;
+  creditLimit: number;
+  account: Account;
+  settings: AppSettings;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  const credit = calculateCreditUsage(balance, creditLimit);
+  const fmt = (n: number) => formatCurrency(n, { ...settings, currency: account.currency });
+  return (
+    <div className="mt-4 rounded-xl border border-line bg-surface-2 p-3">
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <p className="text-muted">{t("accounts.creditUsed")}</p>
+          <p className="mt-0.5 font-medium text-ink">{fmt(credit.usedCredit)}</p>
+        </div>
+        <div>
+          <p className="text-muted">{t("accounts.creditLimit")}</p>
+          <p className="mt-0.5 font-medium text-ink">{fmt(creditLimit)}</p>
+        </div>
+        <div>
+          <p className="text-muted">{t("accounts.creditAvailable")}</p>
+          <p className={cn("mt-0.5 font-medium", credit.isOverLimit ? "text-danger" : "text-ink")}>
+            {fmt(credit.availableCredit ?? 0)}
+          </p>
+        </div>
+      </div>
+      {credit.utilization !== undefined ? (
+        <>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-line">
+            <div
+              className={cn("h-full rounded-full transition-all", credit.isOverLimit ? "bg-danger" : "bg-primary")}
+              style={{ width: `${Math.min(100, credit.utilization)}%` }}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted">
+            {t("accounts.creditUtilization", { percent: Math.round(credit.utilization) })}
+          </p>
+        </>
+      ) : null}
+    </div>
+  );
 }
 
 export function AccountsPage() {
@@ -134,6 +185,15 @@ export function AccountsPage() {
                     }),
                   })}
                 </p>
+                {(account.type === "credit_card" || account.type === "debt") && account.creditLimit ? (
+                  <CreditPanel
+                    account={account}
+                    balance={balance}
+                    creditLimit={account.creditLimit}
+                    settings={settings}
+                    t={t}
+                  />
+                ) : null}
               </div>
             ))}
           </div>

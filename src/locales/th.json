@@ -209,7 +209,14 @@
     "typeEWallet": "กระเป๋าเงินดิจิทัล",
     "typeSavings": "บัญชีออมทรัพย์",
     "typeInvestment": "บัญชีลงทุน",
-    "typeDebt": "บัญชีหนี้สิน"
+    "typeDebt": "บัญชีหนี้สิน (สินเชื่อ)",
+    "formCreditLimit": "วงเงินสินเชื่อ / วงเงินกู้",
+    "formCreditLimitHint": "ไม่บังคับ ระบุวงเงินทั้งหมดหรือยอดเงินกู้",
+    "creditDebtExample": "ตัวอย่าง: SPayLater วงเงิน 20,000 ใช้ไปแล้ว 8,000 → ยอดเงินตั้งต้น -8,000, วงเงิน 20,000 บันทึกซื้อสินค้าด้วย Expense จากบัญชีนี้ ชำระคืนด้วย Transfer จากธนาคารมายังบัญชีนี้",
+    "creditUsed": "ใช้ไปแล้ว",
+    "creditLimit": "วงเงิน",
+    "creditAvailable": "วงเงินคงเหลือ",
+    "creditUtilization": "ใช้ไป {{percent}}%"
   },
   "settings": {
     "title": "ตั้งค่า",
