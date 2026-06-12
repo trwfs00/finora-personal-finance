@@ -22,6 +22,7 @@ const transactionBaseSchema = z.object({
     type: transactionTypeSchema,
     amount: z.coerce.number().positive("Amount must be greater than 0"),
     date: isoDateSchema,
+    time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     categoryId: z.string().optional(),
     fromAccountId: z.string().optional(),
     toAccountId: z.string().optional(),
@@ -149,6 +150,21 @@ export const recurringTransactionSchema = z.object({
   isActive: z.boolean(),
 });
 
+export const savingsGoalSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1, "Goal name is required"),
+  targetAmount: z.coerce.number().positive("Target must be greater than 0"),
+  savedAmount: z.coerce.number().min(0).default(0),
+  linkedAccountId: z.string().optional(),
+  currency: z.string().min(1),
+  deadline: isoDateSchema.optional(),
+  color: z.string().optional(),
+  note: z.string().optional(),
+  isArchived: z.boolean().default(false),
+  createdAt: isoDateSchema,
+  updatedAt: isoDateSchema,
+});
+
 export const settingsSchema = z.object({
   username: z.string().default(""),
   currency: z.string().min(1),
@@ -170,6 +186,7 @@ export const backupSchema = z.object({
   accounts: z.array(accountSchema),
   budgets: z.array(budgetSchema),
   recurringTransactions: z.array(recurringTransactionSchema),
+  savingsGoals: z.array(savingsGoalSchema).optional().default([]),
   settings: settingsSchema,
 });
 

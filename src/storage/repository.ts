@@ -4,6 +4,8 @@ import {
   accountSchema,
   budgetSchema,
   categorySchema,
+  recurringTransactionSchema,
+  savingsGoalSchema,
   settingsSchema,
   transactionSchema,
   validateUniqueAccountNames,
@@ -15,6 +17,9 @@ import type {
   BudgetDraft,
   CategoryDraft,
   FinanceData,
+  RecurringTransaction,
+  SavingsGoal,
+  SavingsGoalDraft,
   StoredData,
   SyncMetadata,
   Transaction,
@@ -101,6 +106,7 @@ export async function getFinanceData(): Promise<FinanceData> {
     accounts,
     budgets,
     recurringTransactions,
+    savingsGoals,
     settingsRecord,
     demoRecord,
   ] = await Promise.all([
@@ -109,6 +115,7 @@ export async function getFinanceData(): Promise<FinanceData> {
     db.accounts.toArray(),
     db.budgets.toArray(),
     db.recurringTransactions.toArray(),
+    db.savingsGoals.toArray(),
     db.settings.get(APP_SETTINGS_ID),
     db.metadata.get(DEMO_LOADED_KEY),
   ]);
@@ -119,6 +126,7 @@ export async function getFinanceData(): Promise<FinanceData> {
     accounts,
     budgets,
     recurringTransactions,
+    savingsGoals,
     settings: settingsRecord?.value ?? DEFAULT_SETTINGS,
     demoLoaded: Boolean(demoRecord?.value),
   };
@@ -132,6 +140,7 @@ export async function getBackupData() {
     accounts: data.accounts,
     budgets: data.budgets,
     recurringTransactions: data.recurringTransactions,
+    savingsGoals: data.savingsGoals,
     settings: data.settings,
   });
 }
@@ -330,6 +339,60 @@ export async function deleteBudget(id: string) {
   await bumpLocalRevision();
 }
 
+export async function addRecurring(draft: Omit<RecurringTransaction, "id">) {
+  const recurring = recurringTransactionSchema.parse({
+    ...draft,
+    id: createId("rec"),
+  });
+  await db.recurringTransactions.add(recurring);
+  await bumpLocalRevision();
+  return recurring;
+}
+
+export async function updateRecurring(id: string, draft: Omit<RecurringTransaction, "id">) {
+  const existing = await db.recurringTransactions.get(id);
+  if (!existing) throw new Error("Recurring transaction not found");
+  const recurring = recurringTransactionSchema.parse({ ...draft, id });
+  await db.recurringTransactions.put(recurring);
+  await bumpLocalRevision();
+  return recurring;
+}
+
+export async function deleteRecurring(id: string) {
+  await db.recurringTransactions.delete(id);
+  await bumpLocalRevision();
+}
+
+export async function addGoal(draft: SavingsGoalDraft): Promise<SavingsGoal> {
+  const now = new Date().toISOString();
+  const goal = savingsGoalSchema.parse({ ...draft, id: createId("goal"), createdAt: now, updatedAt: now });
+  await db.savingsGoals.add(goal);
+  await bumpLocalRevision();
+  return goal;
+}
+
+export async function updateGoal(id: string, draft: SavingsGoalDraft): Promise<SavingsGoal> {
+  const existing = await db.savingsGoals.get(id);
+  if (!existing) throw new Error("Goal not found");
+  const goal = savingsGoalSchema.parse({ ...draft, id, createdAt: existing.createdAt, updatedAt: new Date().toISOString() });
+  await db.savingsGoals.put(goal);
+  await bumpLocalRevision();
+  return goal;
+}
+
+export async function deleteGoal(id: string) {
+  await db.savingsGoals.delete(id);
+  await bumpLocalRevision();
+}
+
+export async function addContribution(id: string, amount: number) {
+  const goal = await db.savingsGoals.get(id);
+  if (!goal) throw new Error("Goal not found");
+  const updated = savingsGoalSchema.parse({ ...goal, savedAmount: goal.savedAmount + amount, updatedAt: new Date().toISOString() });
+  await db.savingsGoals.put(updated);
+  await bumpLocalRevision();
+}
+
 export async function updateSettings(settings: AppSettings) {
   const value = settingsSchema.parse(settings);
   await db.settings.put({ id: APP_SETTINGS_ID, value });
@@ -346,6 +409,7 @@ export async function replaceAllData(data: StoredData) {
       db.accounts,
       db.budgets,
       db.recurringTransactions,
+      db.savingsGoals,
       db.settings,
       db.metadata,
     ],
@@ -356,12 +420,14 @@ export async function replaceAllData(data: StoredData) {
         db.accounts.clear(),
         db.budgets.clear(),
         db.recurringTransactions.clear(),
+        db.savingsGoals.clear(),
       ]);
       await db.transactions.bulkAdd(data.transactions);
       await db.categories.bulkAdd(data.categories);
       await db.accounts.bulkAdd(data.accounts);
       await db.budgets.bulkAdd(data.budgets);
       await db.recurringTransactions.bulkAdd(data.recurringTransactions);
+      await db.savingsGoals.bulkAdd(data.savingsGoals ?? []);
       await db.settings.put({ id: APP_SETTINGS_ID, value: data.settings });
       await db.metadata.put({ key: INITIALIZED_KEY, value: true });
       await db.metadata.put({ key: SCHEMA_VERSION_KEY, value: data.schemaVersion });
@@ -380,6 +446,7 @@ export async function clearAllData() {
       db.accounts,
       db.budgets,
       db.recurringTransactions,
+      db.savingsGoals,
       db.settings,
       db.metadata,
     ],
@@ -390,6 +457,7 @@ export async function clearAllData() {
         db.accounts.clear(),
         db.budgets.clear(),
         db.recurringTransactions.clear(),
+        db.savingsGoals.clear(),
         db.settings.clear(),
         db.metadata.clear(),
       ]);
@@ -413,13 +481,14 @@ export async function hasNonDemoRecords() {
 export async function removeDemoRecords() {
   await db.transaction(
     "rw",
-    [db.transactions, db.accounts, db.categories, db.budgets, db.recurringTransactions, db.metadata],
+    [db.transactions, db.accounts, db.categories, db.budgets, db.recurringTransactions, db.savingsGoals, db.metadata],
     async () => {
       await db.transactions.filter((item) => item.id.startsWith("demo-")).delete();
       await db.accounts.filter((item) => item.id.startsWith("demo-")).delete();
       await db.categories.filter((item) => item.id.startsWith("demo-")).delete();
       await db.budgets.filter((item) => item.id.startsWith("demo-")).delete();
       await db.recurringTransactions.filter((item) => item.id.startsWith("demo-")).delete();
+      await db.savingsGoals.filter((item) => item.id.startsWith("demo-")).delete();
       await db.metadata.put({ key: DEMO_LOADED_KEY, value: false });
     },
   );
@@ -433,13 +502,14 @@ export async function loadDemoDataset(data: Omit<StoredData, "schemaVersion" | "
   await removeDemoRecords();
   await db.transaction(
     "rw",
-    [db.transactions, db.categories, db.accounts, db.budgets, db.recurringTransactions, db.metadata],
+    [db.transactions, db.categories, db.accounts, db.budgets, db.recurringTransactions, db.savingsGoals, db.metadata],
     async () => {
       await db.categories.bulkPut(data.categories);
       await db.accounts.bulkPut(data.accounts);
       await db.transactions.bulkPut(data.transactions);
       await db.budgets.bulkPut(data.budgets);
       await db.recurringTransactions.bulkPut(data.recurringTransactions);
+      await db.savingsGoals.bulkPut(data.savingsGoals ?? []);
       await db.metadata.put({ key: DEMO_LOADED_KEY, value: true });
     },
   );

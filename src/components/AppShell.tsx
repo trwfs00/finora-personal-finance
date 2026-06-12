@@ -1,20 +1,24 @@
 import {
   BarChart3,
+  CalendarDays,
   ChevronLeft,
   CircleDollarSign,
   LayoutDashboard,
   Monitor,
   Moon,
+  MoreHorizontal,
   Plus,
   ReceiptText,
+  Repeat,
   Search,
   Settings,
   Sun,
+  Target,
   WalletCards,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import logoUrl from "../assets/logo.svg";
 import { useShortcutKey } from "../hooks/useShortcutKey";
@@ -49,6 +53,8 @@ export function AppShell() {
   const { t } = useTranslation();
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const location = useLocation();
   const [onboardingOpen, setOnboardingOpen] = useState(() => {
     try {
       return !localStorage.getItem("finora-onboarded");
@@ -103,13 +109,36 @@ export function AppShell() {
     { href: "/budgets", label: t("nav.budgets"), icon: CircleDollarSign },
     { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
     { href: "/accounts", label: t("nav.accounts"), icon: WalletCards },
+    { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
+    { href: "/goals", label: t("nav.goals"), icon: Target },
+    { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
   ];
 
   const bottomNavItems = [
     { href: "/settings", label: t("nav.settings"), icon: Settings },
   ];
 
-  const allNavItems = [...mainNavItems, ...bottomNavItems];
+  // Mobile nav: 4 primary tabs + "More" drawer for the rest
+  const primaryNavItems = [
+    { href: "/", label: t("nav.overview"), icon: LayoutDashboard },
+    { href: "/transactions", label: t("nav.transactions"), icon: ReceiptText },
+    { href: "/accounts", label: t("nav.accounts"), icon: WalletCards },
+    { href: "/budgets", label: t("nav.budgets"), icon: CircleDollarSign },
+  ];
+
+  const secondaryNavItems = [
+    { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
+    { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
+    { href: "/goals", label: t("nav.goals"), icon: Target },
+    { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
+    { href: "/settings", label: t("nav.settings"), icon: Settings },
+  ];
+
+  const isSecondaryActive = secondaryNavItems.some(
+    ({ href }) => href === location.pathname || location.pathname.startsWith(href + "/"),
+  );
+
+  useEffect(() => { setMoreOpen(false); }, [location.pathname]);
 
   if (!initialized) {
     return (
@@ -282,14 +311,66 @@ export function AppShell() {
         <Plus aria-hidden className="h-5 w-5" />
       </button>
 
+      {/* More drawer backdrop */}
+      <div
+        aria-hidden
+        className={cn(
+          "fixed inset-0 z-40 bg-ink/20 transition-opacity duration-200 lg:hidden",
+          moreOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => setMoreOpen(false)}
+      />
+
+      {/* More drawer panel */}
+      <div
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-40 rounded-t-2xl border-t border-line bg-surface shadow-2xl transition-transform duration-200 ease-out lg:hidden",
+          moreOpen ? "translate-y-0" : "translate-y-full",
+        )}
+      >
+        <div className="flex justify-center pb-1 pt-3">
+          <div className="h-1 w-10 rounded-full bg-ink/20" />
+        </div>
+        <div className="grid grid-cols-5 gap-1 px-4 pb-6 pt-3">
+          {secondaryNavItems.map(({ href, label, icon: Icon }) => (
+            <NavLink
+              key={href}
+              className={({ isActive }) =>
+                cn(
+                  "flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-[11px] font-medium transition-colors",
+                  isActive ? "bg-primary/8 text-primary" : "text-muted hover:bg-ink/5 hover:text-ink",
+                )
+              }
+              end={href === "/"}
+              to={href}
+            >
+              <Icon aria-hidden className="h-5 w-5" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </div>
+
       {/* Mobile nav */}
       <nav
         aria-label={t("shell.mobileNav")}
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-line bg-bg px-1 py-1 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-bg px-1 py-1 lg:hidden"
       >
-        {allNavItems.map((item) => (
+        {primaryNavItems.map((item) => (
           <MobileNavItem key={item.href} {...item} />
         ))}
+        <button
+          aria-label={t("shell.menus")}
+          className={cn(
+            "flex min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors",
+            isSecondaryActive || moreOpen ? "text-primary" : "text-muted",
+          )}
+          onClick={() => setMoreOpen((v) => !v)}
+          type="button"
+        >
+          <MoreHorizontal aria-hidden className="h-4 w-4" />
+          <span className="w-full truncate text-center">{t("shell.menus")}</span>
+        </button>
       </nav>
 
       <Dialog

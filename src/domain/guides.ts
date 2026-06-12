@@ -1,4 +1,4 @@
-export type GuidePage = "accounts" | "transactions" | "budgets" | "settings";
+export type GuidePage = "accounts" | "transactions" | "budgets" | "settings" | "recurring" | "goals";
 
 export interface GuideUseCase {
   id: string;
@@ -315,6 +315,121 @@ export const PAGE_GUIDES: PageGuide[] = [
           "guides.settings.syncConflict.step3",
         ],
         warningKey: "guides.settings.syncConflict.warning",
+      },
+    ],
+  },
+  {
+    page: "recurring",
+    titleKey: "guides.recurring.title",
+    introKey: "guides.recurring.intro",
+    useCases: [
+      {
+        id: "subscription",
+        titleKey: "guides.recurring.subscription.title",
+        descriptionKey: "guides.recurring.subscription.description",
+        stepsKeys: [
+          "guides.recurring.subscription.step1",
+          "guides.recurring.subscription.step2",
+          "guides.recurring.subscription.step3",
+          "guides.recurring.subscription.step4",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.fields.transactionType", valueKey: "guides.values.expense" },
+          { labelKey: "guides.recurring.fields.frequency", value: "Monthly" },
+          { labelKey: "guides.recurring.fields.autoGenerate", value: "On" },
+        ],
+      },
+      {
+        id: "salary",
+        titleKey: "guides.recurring.salary.title",
+        descriptionKey: "guides.recurring.salary.description",
+        stepsKeys: [
+          "guides.recurring.salary.step1",
+          "guides.recurring.salary.step2",
+          "guides.recurring.salary.step3",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.fields.transactionType", valueKey: "guides.values.income" },
+          { labelKey: "guides.recurring.fields.frequency", value: "Monthly" },
+        ],
+      },
+      {
+        id: "custom-interval",
+        titleKey: "guides.recurring.customInterval.title",
+        descriptionKey: "guides.recurring.customInterval.description",
+        stepsKeys: [
+          "guides.recurring.customInterval.step1",
+          "guides.recurring.customInterval.step2",
+          "guides.recurring.customInterval.step3",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.recurring.fields.frequency", value: "Custom" },
+          { labelKey: "guides.recurring.fields.interval", value: "90" },
+        ],
+      },
+      {
+        id: "manual-confirm",
+        titleKey: "guides.recurring.manualConfirm.title",
+        descriptionKey: "guides.recurring.manualConfirm.description",
+        stepsKeys: [
+          "guides.recurring.manualConfirm.step1",
+          "guides.recurring.manualConfirm.step2",
+          "guides.recurring.manualConfirm.step3",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.recurring.fields.autoGenerate", value: "Off" },
+        ],
+      },
+    ],
+  },
+  {
+    page: "goals",
+    titleKey: "guides.goals.title",
+    introKey: "guides.goals.intro",
+    useCases: [
+      {
+        id: "emergency-fund",
+        titleKey: "guides.goals.emergencyFund.title",
+        descriptionKey: "guides.goals.emergencyFund.description",
+        stepsKeys: [
+          "guides.goals.emergencyFund.step1",
+          "guides.goals.emergencyFund.step2",
+          "guides.goals.emergencyFund.step3",
+          "guides.goals.emergencyFund.step4",
+        ],
+      },
+      {
+        id: "linked-account",
+        titleKey: "guides.goals.linkedAccount.title",
+        descriptionKey: "guides.goals.linkedAccount.description",
+        stepsKeys: [
+          "guides.goals.linkedAccount.step1",
+          "guides.goals.linkedAccount.step2",
+          "guides.goals.linkedAccount.step3",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.fields.account", value: "Savings account" },
+        ],
+      },
+      {
+        id: "deadline",
+        titleKey: "guides.goals.deadline.title",
+        descriptionKey: "guides.goals.deadline.description",
+        stepsKeys: [
+          "guides.goals.deadline.step1",
+          "guides.goals.deadline.step2",
+          "guides.goals.deadline.step3",
+        ],
+      },
+      {
+        id: "archive",
+        titleKey: "guides.goals.archive.title",
+        descriptionKey: "guides.goals.archive.description",
+        stepsKeys: [
+          "guides.goals.archive.step1",
+          "guides.goals.archive.step2",
+          "guides.goals.archive.step3",
+        ],
       },
     ],
   },

@@ -9,7 +9,9 @@ import type { AccountType, Transaction } from "../domain/types";
 import { useFinanceStore } from "../store/finance-store";
 import { Button } from "./ui/button";
 import { DatePicker } from "./ui/date-picker";
-import { Field, Input, Textarea } from "./ui/field";
+import { NoteInput, TagInput } from "./ui/tag-input";
+import { TimePicker } from "./ui/time-picker";
+import { Field, Input } from "./ui/field";
 import {
   Select,
   SelectContent,
@@ -41,6 +43,7 @@ type FormValues = {
   type: "income" | "expense" | "transfer";
   amount: number;
   date: string;
+  time: string;
   categoryId?: string;
   accountId?: string;
   fromAccountId?: string;
@@ -60,6 +63,7 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
   const { t } = useTranslation();
   const categories = useFinanceStore((state) => state.categories);
   const accounts = useFinanceStore((state) => state.accounts);
+  const transactions = useFinanceStore((state) => state.transactions);
   const addTransaction = useFinanceStore((state) => state.addTransaction);
   const updateTransaction = useFinanceStore((state) => state.updateTransaction);
   const loading = useFinanceStore((state) => state.loading);
@@ -71,6 +75,7 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
           type: z.enum(["income", "expense", "transfer"]),
           amount: z.coerce.number().positive(t("form.amountError")),
           date: z.string().min(1, t("form.dateError")),
+          time: z.string().regex(/^\d{2}:\d{2}$/, t("form.timeError")),
           categoryId: z.string().optional(),
           accountId: z.string().optional(),
           fromAccountId: z.string().optional(),
@@ -135,6 +140,7 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
       type: transaction?.type ?? "expense",
       amount: transaction?.amount ?? 0,
       date: transaction?.date ?? format(new Date(), "yyyy-MM-dd"),
+      time: transaction?.time ?? format(new Date(), "HH:mm"),
       categoryId: transaction?.categoryId ?? "",
       accountId: transaction?.accountId ?? "",
       fromAccountId: transaction?.fromAccountId ?? "",
@@ -152,7 +158,27 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
   const selectedFromAccountId = form.watch("fromAccountId");
   const selectedToAccountId = form.watch("toAccountId");
   const selectedDate = form.watch("date");
-  const selectedPaymentMethod = form.watch("paymentMethod");
+  const selectedTime = form.watch("time");
+  const selectedTagsText = form.watch("tagsText") ?? "";
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    transactions.forEach((tx) => tx.tags?.forEach((tag) => set.add(tag)));
+    return Array.from(set).sort();
+  }, [transactions]);
+
+  const noteSuggestions = useMemo(() => {
+    if (!selectedCategoryId) return [];
+    const seen = new Set<string>();
+    return transactions
+      .filter((tx) => tx.categoryId === selectedCategoryId && tx.note && tx.id !== transaction?.id)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((tx) => tx.note!)
+      .filter((note) => !seen.has(note) && !!seen.add(note))
+      .slice(0, 20);
+  }, [transactions, selectedCategoryId, transaction?.id]);
+
+const selectedPaymentMethod = form.watch("paymentMethod");
 
   const categoryOptions = useMemo(
     () =>
@@ -169,6 +195,7 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
       type: values.type,
       amount: values.amount,
       date: values.date,
+      time: values.time || undefined,
       categoryId:
         values.type === "transfer" ? undefined : emptyToUndefined(values.categoryId),
       accountId:
@@ -196,7 +223,7 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
 
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Field label={t("form.type")} htmlFor="type" error={form.formState.errors.type?.message}>
           <Select
             onValueChange={(value) =>
@@ -223,6 +250,14 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
             id="date"
             onChange={(value) => form.setValue("date", value, { shouldValidate: true })}
             value={selectedDate}
+          />
+        </Field>
+        <Field label={t("form.time")} htmlFor="time" error={form.formState.errors.time?.message}>
+          <TimePicker
+            ariaLabel={t("form.time")}
+            id="time"
+            onChange={(value) => form.setValue("time", value, { shouldValidate: true })}
+            value={selectedTime}
           />
         </Field>
       </div>
@@ -386,16 +421,24 @@ export function TransactionForm({ transaction, onSaved }: TransactionFormProps) 
           </Select>
         </Field>
         <Field label={t("form.tags")} htmlFor="tagsText" hint={t("form.tagsHint")}>
-          <Input
+          <TagInput
             id="tagsText"
+            onChange={(v) => form.setValue("tagsText", v)}
             placeholder={t("form.tagsPlaceholder")}
-            {...form.register("tagsText")}
+            suggestions={allTags}
+            value={selectedTagsText}
           />
         </Field>
       </div>
 
       <Field label={t("form.note")} htmlFor="note">
-        <Textarea id="note" placeholder={t("form.notePlaceholder")} {...form.register("note")} />
+        <NoteInput
+          id="note"
+          onChange={(v) => form.setValue("note", v)}
+          placeholder={t("form.notePlaceholder")}
+          suggestions={noteSuggestions}
+          value={form.watch("note") ?? ""}
+        />
       </Field>
 
       <Field

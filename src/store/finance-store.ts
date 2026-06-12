@@ -1,6 +1,8 @@
+import { format } from "date-fns";
 import { create } from "zustand";
 
 import { buildDemoData } from "../data/demo";
+import { advanceNextRunDate, generateDueOccurrences } from "../domain/recurring";
 import type {
   Account,
   AccountDraft,
@@ -11,6 +13,8 @@ import type {
   CategoryDraft,
   FinanceData,
   RecurringTransaction,
+  SavingsGoal,
+  SavingsGoalDraft,
   StoredData,
   Transaction,
   TransactionDraft,
@@ -34,6 +38,15 @@ interface FinanceState extends FinanceData {
   deleteCategory: (id: string) => Promise<void>;
   upsertBudget: (draft: BudgetDraft) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
+  addRecurring: (draft: Omit<RecurringTransaction, "id">) => Promise<void>;
+  updateRecurring: (id: string, draft: Omit<RecurringTransaction, "id">) => Promise<void>;
+  deleteRecurring: (id: string) => Promise<void>;
+  confirmRecurringOccurrence: (id: string) => Promise<void>;
+  generateDueRecurring: () => Promise<void>;
+  addGoal: (draft: SavingsGoalDraft) => Promise<void>;
+  updateGoal: (id: string, draft: SavingsGoalDraft) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+  addContribution: (id: string, amount: number) => Promise<void>;
   updateSettings: (settings: AppSettings) => Promise<void>;
   restoreData: (data: StoredData) => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -47,6 +60,7 @@ const emptyData: FinanceData = {
   accounts: [],
   budgets: [],
   recurringTransactions: [],
+  savingsGoals: [],
   settings: {
     username: "",
     currency: "THB",
@@ -67,13 +81,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   loading: false,
   error: null,
   initialize: async () => {
-    if (get().initialized) {
-      return;
-    }
+    if (get().initialized) return;
     await run(set, async () => {
       const data = await repository.getFinanceData();
       set({ ...data, initialized: true });
     });
+    await get().generateDueRecurring();
   },
   refresh: async () => {
     await run(set, async () => {
@@ -113,6 +126,71 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
   deleteBudget: async (id) => {
     await mutate(set, () => repository.deleteBudget(id));
+  },
+  addRecurring: async (draft) => {
+    await mutate(set, () => repository.addRecurring(draft));
+  },
+  updateRecurring: async (id, draft) => {
+    await mutate(set, () => repository.updateRecurring(id, draft));
+  },
+  deleteRecurring: async (id) => {
+    await mutate(set, () => repository.deleteRecurring(id));
+  },
+  confirmRecurringOccurrence: async (id) => {
+    await mutate(set, async () => {
+      const recurring = get().recurringTransactions.find((r) => r.id === id);
+      if (!recurring) return;
+      const today = format(new Date(), "yyyy-MM-dd");
+      const draft = {
+        ...recurring.transactionTemplate,
+        date: recurring.nextRunDate,
+        recurringId: recurring.id,
+      };
+      await repository.addTransaction(draft);
+      const newNextRunDate = advanceNextRunDate(recurring, today);
+      await repository.updateRecurring(id, { ...recurring, nextRunDate: newNextRunDate });
+    });
+  },
+  addGoal: async (draft) => {
+    await mutate(set, () => repository.addGoal(draft));
+  },
+  updateGoal: async (id, draft) => {
+    await mutate(set, () => repository.updateGoal(id, draft));
+  },
+  deleteGoal: async (id) => {
+    await mutate(set, () => repository.deleteGoal(id));
+  },
+  addContribution: async (id, amount) => {
+    await mutate(set, () => repository.addContribution(id, amount));
+  },
+  generateDueRecurring: async () => {
+    try {
+      const { recurringTransactions } = get();
+      const today = format(new Date(), "yyyy-MM-dd");
+      let changed = false;
+
+      for (const recurring of recurringTransactions) {
+        if (!recurring.isActive || !recurring.autoGenerate) continue;
+        if (recurring.nextRunDate > today) continue;
+
+        const drafts = generateDueOccurrences(recurring, today);
+        if (drafts.length === 0) continue;
+
+        for (const draft of drafts) {
+          await repository.addTransaction(draft);
+        }
+        const newNextRunDate = advanceNextRunDate(recurring, today);
+        await repository.updateRecurring(recurring.id, { ...recurring, nextRunDate: newNextRunDate });
+        changed = true;
+      }
+
+      if (changed) {
+        const data = await repository.getFinanceData();
+        set(data);
+      }
+    } catch (e) {
+      console.error("generateDueRecurring failed", e);
+    }
   },
   updateSettings: async (settings) => {
     await mutate(set, () => repository.updateSettings(settings));
@@ -162,3 +240,4 @@ export type StoreCategory = Category;
 export type StoreAccount = Account;
 export type StoreBudget = Budget;
 export type StoreRecurringTransaction = RecurringTransaction;
+export type StoreSavingsGoal = SavingsGoal;

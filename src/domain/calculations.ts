@@ -10,11 +10,19 @@ import {
   subMonths,
 } from "date-fns";
 
-import type { Account, AppSettings, Budget, Category, Transaction } from "./types";
+import type { Account, AppSettings, Budget, Category, SavingsGoal, Transaction } from "./types";
 
 export interface AccountBalance {
   account: Account;
   balance: number;
+}
+
+export interface NetWorthPoint {
+  month: string;
+  assets: number;
+  liabilities: number;
+  netWorth: number;
+  byAccount: Record<string, number>;
 }
 
 export interface BudgetUsage {
@@ -110,6 +118,48 @@ export function calculateAccountBalance(
 
     return balance;
   }, account.initialBalance);
+}
+
+export function calculateNetWorthHistory(
+  accounts: Account[],
+  transactions: Transaction[],
+  months: number,
+  now = new Date(),
+): NetWorthPoint[] {
+  const netWorthAccounts = accounts.filter((a) => a.includeInNetWorth);
+
+  return Array.from({ length: months }, (_, i) => {
+    const cutoff = endOfMonth(subMonths(now, months - 1 - i));
+    const cutoffStr = format(cutoff, "yyyy-MM-dd");
+    const month = format(cutoff, "yyyy-MM");
+
+    const txUpToCutoff = transactions.filter((tx) => tx.date <= cutoffStr);
+
+    const byAccount: Record<string, number> = {};
+    let assets = 0;
+    let liabilities = 0;
+
+    for (const account of netWorthAccounts) {
+      const balance = calculateAccountBalance(account, txUpToCutoff);
+      byAccount[account.id] = balance;
+      if (balance >= 0) assets += balance;
+      else liabilities += balance;
+    }
+
+    return { month, assets, liabilities, netWorth: assets + liabilities, byAccount };
+  });
+}
+
+export function calculateGoalProgress(
+  goal: SavingsGoal,
+  accounts: Account[],
+  transactions: Transaction[],
+): number {
+  if (goal.linkedAccountId) {
+    const account = accounts.find((a) => a.id === goal.linkedAccountId);
+    if (account) return calculateAccountBalance(account, transactions);
+  }
+  return goal.savedAmount;
 }
 
 export function calculateSavingsRate(totalIncome: number, netIncome: number) {
@@ -329,7 +379,13 @@ export function calculateDashboardMetrics(
     topCategories: getTopExpenseCategories(monthTransactions, categories),
     budgetUsage,
     recentTransactions: [...transactions]
-      .sort((first, second) => compareAsc(parseISO(second.date), parseISO(first.date)))
+      .sort((first, second) => {
+        const dateCmp = compareAsc(parseISO(second.date), parseISO(first.date));
+        if (dateCmp !== 0) return dateCmp;
+        const tieA = second.time ?? second.createdAt ?? "";
+        const tieB = first.time ?? first.createdAt ?? "";
+        return tieA.localeCompare(tieB);
+      })
       .slice(0, 6),
     monthOverMonthExpenseChange,
     accountBalances,

@@ -18,6 +18,7 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   date: string;
+  time?: string;
   categoryId?: string;
   fromAccountId?: string;
   toAccountId?: string;
@@ -82,6 +83,23 @@ export interface RecurringTransaction {
   isActive: boolean;
 }
 
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  savedAmount: number;
+  linkedAccountId?: string;
+  currency: string;
+  deadline?: string;
+  color?: string;
+  note?: string;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SavingsGoalDraft = Omit<SavingsGoal, "id" | "createdAt" | "updatedAt">;
+
 export interface AppSettings {
   username: string;
   currency: string;
@@ -129,6 +147,7 @@ export interface StoredData {
   accounts: Account[];
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
+  savingsGoals: SavingsGoal[];
   settings: AppSettings;
 }
 
@@ -143,6 +162,7 @@ export interface FinanceData {
   accounts: Account[];
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
+  savingsGoals: SavingsGoal[];
   settings: AppSettings;
   demoLoaded: boolean;
 }
