@@ -5,6 +5,9 @@
     "budgets": "Budgets",
     "analytics": "Analytics",
     "accounts": "Accounts",
+    "recurring": "Recurring",
+    "goals": "Goals",
+    "calendar": "Calendar",
     "settings": "Settings",
     "menu": "Menu"
   },
@@ -91,6 +94,8 @@
     "approaching": "Approaching",
     "onTrack": "On track",
     "financialPosition": "Financial position",
+    "netWorthTrend": "Net Worth",
+    "viewHistory": "View history",
     "netWorth": "Net worth",
     "projectedSpending": "Projected spending",
     "monthOverMonth": "Month over month",
@@ -167,6 +172,13 @@
     "perDay": "per day",
     "byMonthEnd": "by month end",
     "vsLastMonth": "vs last month",
+    "netWorthTrend": "Net Worth Trend",
+    "assets": "Assets",
+    "liabilities": "Liabilities",
+    "netWorth": "Net Worth",
+    "viewSummary": "Summary",
+    "viewByAccount": "By account",
+    "noNetWorthAccounts": "No accounts are marked as 'Include in net worth'. Enable this in account settings.",
     "monthlyTrend": "Monthly trend",
     "last12months": "Last 12 months",
     "trendInfoDesc": "Income, expenses, and net savings tracked over the last 12 months.",
@@ -178,6 +190,15 @@
     "noCategoryData": "Expense categories will appear here.",
     "largestExpenses": "Largest expenses",
     "insights": "Calm insights"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Daily spending heatmap — click any day to see transactions.",
+    "selectDay": "Select a day to view transactions",
+    "noTransactions": "No transactions on this day",
+    "less": "Less",
+    "more": "More",
+    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
   },
   "accounts": {
     "title": "Accounts",
@@ -320,6 +341,85 @@
     "income": "Income",
     "default": "Default",
     "disabled": "Disabled"
+  },
+  "goals": {
+    "title": "Savings Goals",
+    "subtitle": "Track progress toward financial targets — a house fund, emergency savings, or a big purchase.",
+    "addGoal": "Add goal",
+    "editDialog": "Edit goal",
+    "addDialog": "New savings goal",
+    "dialogDesc": "Set a target and track your progress.",
+    "emptyTitle": "No savings goals yet",
+    "emptyDesc": "Create a goal to track progress toward a financial target.",
+    "active": "Active",
+    "completed": "Completed",
+    "archived": "Archived",
+    "showArchived": "Show archived",
+    "hideArchived": "Hide archived",
+    "archiveGoal": "Archive",
+    "unarchiveGoal": "Unarchive",
+    "addContribution": "Add contribution",
+    "contributionAmount": "Amount",
+    "confirmContribution": "Add",
+    "trackedVia": "Tracked via {{account}}",
+    "linkedAccount": "Linked account",
+    "linkedAccountHint": "Optional. Link to a savings account to track its balance as progress.",
+    "noLinkedAccount": "Manual tracking",
+    "targetAmount": "Target amount",
+    "deadline": "Target date",
+    "deadlineHint": "Optional.",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "overdue": "Overdue",
+    "goalName": "Goal name",
+    "goalNamePlaceholder": "e.g. Emergency fund, House deposit",
+    "note": "Note",
+    "color": "Color",
+    "formSave": "Save goal",
+    "formAdd": "Add goal",
+    "deleteTitle": "Delete goal?",
+    "deleteDesc": "\"{{name}}\" and its contribution history will be permanently removed.",
+    "deleteLabel": "Delete"
+  },
+  "recurring": {
+    "title": "Recurring",
+    "subtitle": "Transactions that repeat automatically on a set schedule.",
+    "addRecurring": "Add recurring",
+    "editDialog": "Edit recurring transaction",
+    "addDialog": "New recurring transaction",
+    "dialogDesc": "Set a schedule and the transaction will be generated automatically.",
+    "pending": "Pending confirmation",
+    "pendingDesc": "These recurring transactions are due. Review and confirm each one.",
+    "confirmNow": "Confirm",
+    "all": "All recurring",
+    "emptyTitle": "No recurring transactions",
+    "emptyDesc": "Add recurring transactions for fixed expenses like rent, subscriptions, or salary.",
+    "active": "Active",
+    "paused": "Paused",
+    "nextDue": "Next due",
+    "lastGenerated": "Last generated",
+    "autoGenerate": "Auto-generate",
+    "autoGenerateHint": "Generate transaction automatically when due. Turn off to confirm manually.",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "endDateHint": "Optional. Leave blank to repeat indefinitely.",
+    "frequency": "Frequency",
+    "interval": "Every (days)",
+    "intervalHint": "Number of days between each occurrence.",
+    "freq_daily": "Daily",
+    "freq_weekly": "Weekly",
+    "freq_monthly": "Monthly",
+    "freq_yearly": "Yearly",
+    "freq_custom": "Custom interval",
+    "freq_custom_days_one": "Every {{count}} day",
+    "freq_custom_days_other": "Every {{count}} days",
+    "deleteTitle": "Delete recurring?",
+    "deleteDesc": "\"{{note}}\" will stop generating. Past transactions are kept.",
+    "deleteLabel": "Delete",
+    "pauseLabel": "Pause",
+    "resumeLabel": "Resume",
+    "formSave": "Save",
+    "formAdd": "Add recurring"
   },
   "datePicker": {
     "pickDate": "Pick a date",
@@ -599,6 +699,95 @@
         "step1": "The budget bar turns red and shows Over when spending exceeds the limit.",
         "step2": "Finora still records all transactions — no spending is blocked.",
         "step3": "Review top categories on the dashboard to find where overspending happened."
+      }
+    },
+    "recurring": {
+      "title": "Recurring transactions guide",
+      "intro": "Automate regular income and expenses so you never have to enter them manually.",
+      "fields": {
+        "frequency": "Frequency",
+        "interval": "Every (days)",
+        "autoGenerate": "Auto-generate"
+      },
+      "subscription": {
+        "title": "Monthly subscription",
+        "description": "Record a fixed recurring expense like Netflix, Spotify, or gym membership.",
+        "step1": "Click Add recurring.",
+        "step2": "Set Type to Expense, enter the amount and category.",
+        "step3": "Set Frequency to Monthly and choose a start date matching the billing date.",
+        "step4": "Enable Auto-generate — the transaction will be created automatically each month."
+      },
+      "salary": {
+        "title": "Monthly salary or income",
+        "description": "Automatically record income that arrives on a fixed date each month.",
+        "step1": "Click Add recurring, set Type to Income.",
+        "step2": "Enter the net amount received and select the bank account.",
+        "step3": "Set Frequency to Monthly with a start date matching your pay date."
+      },
+      "customInterval": {
+        "title": "Custom interval (e.g. quarterly insurance)",
+        "description": "Use a custom interval for expenses that repeat every N days.",
+        "step1": "Set Frequency to Custom interval.",
+        "step2": "Enter the number of days between occurrences (e.g. 90 for quarterly).",
+        "step3": "Set the start date to the next due date."
+      },
+      "manualConfirm": {
+        "title": "Manual confirmation (variable amounts)",
+        "description": "Use manual confirmation when the amount varies each time, like utilities.",
+        "step1": "Create the recurring transaction with Auto-generate turned off.",
+        "step2": "When it is due, it appears in the Pending confirmation section.",
+        "step3": "Click Confirm to review and generate the transaction for that period."
+      }
+    },
+    "goals": {
+      "title": "Savings goals guide",
+      "intro": "Set targets, track progress, and stay motivated toward financial milestones.",
+      "emergencyFund": {
+        "title": "Emergency fund (manual tracking)",
+        "description": "Build a safety net by manually recording each time you set aside money.",
+        "step1": "Click Add goal and name it Emergency fund.",
+        "step2": "Set the target amount (e.g. 3–6 months of expenses).",
+        "step3": "Leave Linked account empty to use manual tracking.",
+        "step4": "Each time you save money, click Add contribution to update progress."
+      },
+      "linkedAccount": {
+        "title": "Linked savings account",
+        "description": "Connect a goal to a savings or investment account — progress updates automatically as transactions are recorded.",
+        "step1": "Create a savings account in Accounts (type: Savings account).",
+        "step2": "Add a goal and select that account in Linked account.",
+        "step3": "Progress reflects the current account balance — no manual contributions needed."
+      },
+      "deadline": {
+        "title": "Goal with a deadline",
+        "description": "Add a target date to see how many days remain and stay on track.",
+        "step1": "Set Target date when creating or editing a goal.",
+        "step2": "The card shows days remaining, turning orange when the deadline is close.",
+        "step3": "If the deadline passes without reaching the target, the card shows Overdue."
+      },
+      "archive": {
+        "title": "Archiving a completed goal",
+        "description": "Keep your goal list tidy by archiving goals you have reached.",
+        "step1": "When progress reaches 100%, the goal shows a Completed badge automatically.",
+        "step2": "Click the Archive button on the goal card to move it out of the active list.",
+        "step3": "Toggle Show archived at any time to view or restore archived goals."
+      }
+    },
+    "calendar": {
+      "title": "Calendar spending guide",
+      "intro": "Use the calendar heatmap to spot heavy-spending days and review daily transactions.",
+      "heatmap": {
+        "title": "Reading the heatmap",
+        "description": "Each day cell is shaded by relative spending — darker means more spent.",
+        "step1": "Darker red cells = higher expense relative to other days in the month.",
+        "step2": "The shade is percentile-based, so one unusually large day will stand out.",
+        "step3": "Days from other months are shown dimmed for context."
+      },
+      "dayDetail": {
+        "title": "Viewing day transactions",
+        "description": "Click any day cell to see every transaction recorded on that date.",
+        "step1": "Click a cell to open the detail panel (desktop) or bottom sheet (mobile).",
+        "step2": "The panel shows income, expense, and transfer entries with category icons.",
+        "step3": "Click the same cell again, or tap outside, to close the panel."
       }
     },
     "settings": {

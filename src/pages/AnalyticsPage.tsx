@@ -9,13 +9,14 @@ import {
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { CategoryChart, MonthlyTrendChart } from "../components/Charts";
+import { CategoryChart, MonthlyTrendChart, NetWorthTrendChart } from "../components/Charts";
 import { Badge } from "../components/ui/badge";
 import { MonthPicker } from "../components/ui/date-picker";
 import { EmptyState } from "../components/ui/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import {
   calculateDashboardMetrics,
+  calculateNetWorthHistory,
   getMonthlyTrend,
   type InsightData,
 } from "../domain/calculations";
@@ -54,6 +55,11 @@ export function AnalyticsPage() {
   }, [month]);
 
   const monthlyTrend = useMemo(() => getMonthlyTrend(transactions), [transactions]);
+
+  const netWorthHistory = useMemo(
+    () => calculateNetWorthHistory(accounts, transactions, 24),
+    [accounts, transactions],
+  );
 
   const largestExpenses = useMemo(
     () =>
@@ -105,6 +111,14 @@ export function AnalyticsPage() {
         </div>
       ) : (
         <div className="space-y-6 pt-6">
+          {/* Net Worth Trend */}
+          <section className="panel p-5">
+            <h2 className="mb-4 text-base font-semibold text-ink">
+              {t("analytics.netWorthTrend")}
+            </h2>
+            <NetWorthTrendChart data={netWorthHistory} accounts={accounts} settings={settings} />
+          </section>
+
           {/* KPI strip — unified panel matching Dashboard MetricCell style */}
           <section aria-label="KPI metrics">
             <div className="panel overflow-hidden">
