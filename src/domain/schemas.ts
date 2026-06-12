@@ -22,6 +22,7 @@ const transactionBaseSchema = z.object({
     type: transactionTypeSchema,
     amount: z.coerce.number().positive("Amount must be greater than 0"),
     date: isoDateSchema,
+    time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     categoryId: z.string().optional(),
     fromAccountId: z.string().optional(),
     toAccountId: z.string().optional(),

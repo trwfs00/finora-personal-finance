@@ -329,7 +329,13 @@ export function calculateDashboardMetrics(
     topCategories: getTopExpenseCategories(monthTransactions, categories),
     budgetUsage,
     recentTransactions: [...transactions]
-      .sort((first, second) => compareAsc(parseISO(second.date), parseISO(first.date)))
+      .sort((first, second) => {
+        const dateCmp = compareAsc(parseISO(second.date), parseISO(first.date));
+        if (dateCmp !== 0) return dateCmp;
+        const tieA = second.time ?? second.createdAt ?? "";
+        const tieB = first.time ?? first.createdAt ?? "";
+        return tieA.localeCompare(tieB);
+      })
       .slice(0, 6),
     monthOverMonthExpenseChange,
     accountBalances,

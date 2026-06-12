@@ -29,7 +29,7 @@ import {
 } from "../components/ui/select";
 import { createTransactionCsv } from "../domain/backup";
 import type { Transaction } from "../domain/types";
-import { downloadFile, formatCurrency } from "../lib/format";
+import { downloadFile, formatCurrency, formatTime } from "../lib/format";
 import { useFinanceStore } from "../store/finance-store";
 
 export function TransactionsPage() {
@@ -105,7 +105,13 @@ export function TransactionsPage() {
           .toLowerCase()
           .includes(searchValue);
       })
-      .sort((first, second) => second.date.localeCompare(first.date));
+      .sort((first, second) => {
+        const dateCmp = second.date.localeCompare(first.date);
+        if (dateCmp !== 0) return dateCmp;
+        const tieA = second.time ?? second.createdAt ?? "";
+        const tieB = first.time ?? first.createdAt ?? "";
+        return tieA.localeCompare(tieB);
+      });
   }, [
     accountId,
     accountMap,
@@ -324,7 +330,12 @@ export function TransactionsPage() {
                   className="grid gap-3 px-4 py-4 lg:grid-cols-[120px_100px_1fr_150px_150px_100px_80px] gap-4 lg:items-center"
                   key={transaction.id}
                 >
-                  <div className="text-sm text-muted">{transaction.date}</div>
+                  <div>
+                    <div className="text-sm text-muted">{transaction.date}</div>
+                    <div className="text-xs text-muted/60">
+                      {transaction.time ?? formatTime(transaction.createdAt)}
+                    </div>
+                  </div>
                   <div>
                     <Badge
                       tone={
