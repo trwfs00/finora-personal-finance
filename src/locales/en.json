@@ -334,6 +334,8 @@
     "date": "Date",
     "time": "Time",
     "account": "Account",
+    "fromAccount": "From account",
+    "toAccount": "To account",
     "category": "Category",
     "notFound": "—",
     "reviewHint": "Review the extracted values before applying. Category match may be inaccurate.",

@@ -4,8 +4,24 @@ import type { Account, Category } from "../../domain/types";
 import type { SlipData } from "./parse";
 
 export interface SlipMatch {
+  type?: "transfer";
   categoryId?: string;
   accountId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+}
+
+function matchAccountBySuffix(
+  suffix: string,
+  accounts: Account[],
+): Account | undefined {
+  const runs = suffix.match(/\d{3,}/g) ?? [];
+  if (runs.length === 0) return undefined;
+  return accounts.find((acc) => {
+    if (!acc.accountNumber) return false;
+    const stored = acc.accountNumber.replace(/\D/g, "");
+    return runs.some((run) => stored.includes(run));
+  });
 }
 
 export function matchSlip(
@@ -15,6 +31,7 @@ export function matchSlip(
 ): SlipMatch {
   const result: SlipMatch = {};
 
+  // Category by recipient name (expense only)
   if (slip.recipientName) {
     const expenseCategories = categories.filter(
       (c) => c.isActive && c.type === "expense",
@@ -24,19 +41,25 @@ export function matchSlip(
     if (matches.length > 0) result.categoryId = matches[0].item.id;
   }
 
-  // Digit-substring match first: extract ≥3-digit runs from slip suffix, check stored accountNumber
-  if (slip.accountSuffix) {
-    const slipRuns = slip.accountSuffix.match(/\d{3,}/g) ?? [];
-    if (slipRuns.length > 0) {
-      const matched = accounts.find((acc) => {
-        if (!acc.accountNumber) return false;
-        const stored = acc.accountNumber.replace(/\D/g, "");
-        return slipRuns.some((run) => stored.includes(run));
-      });
-      if (matched) result.accountId = matched.id;
+  // Account matching — use first two suffixes (sender, receiver)
+  const suffixes = slip.accountSuffixes ?? (slip.accountSuffix ? [slip.accountSuffix] : []);
+
+  if (suffixes.length >= 2) {
+    const sender = matchAccountBySuffix(suffixes[0], accounts);
+    const receiver = matchAccountBySuffix(suffixes[1], accounts);
+    if (sender && receiver && sender.id !== receiver.id) {
+      result.type = "transfer";
+      result.fromAccountId = sender.id;
+      result.toAccountId = receiver.id;
+      return result;
     }
+    if (sender) result.accountId = sender.id;
+  } else if (suffixes.length === 1) {
+    const matched = matchAccountBySuffix(suffixes[0], accounts);
+    if (matched) result.accountId = matched.id;
   }
-  // Fallback: fuzzy match against account name
+
+  // Fuzzy fallback if no accountNumber match
   if (!result.accountId && (slip.bankName || slip.accountSuffix)) {
     const query = [slip.bankName, slip.accountSuffix].filter(Boolean).join(" ");
     const fuseAccounts = new Fuse(accounts, { keys: ["name"], threshold: 0.45 });

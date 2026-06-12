@@ -13,15 +13,27 @@ import { Button } from "./ui/button";
 type ScanStatus =
   | { status: "idle" }
   | { status: "processing"; progress: number; message: string }
-  | { status: "done"; slip: SlipData; categoryId?: string; accountId?: string; preview: string }
+  | {
+      status: "done";
+      slip: SlipData;
+      type?: "transfer";
+      categoryId?: string;
+      accountId?: string;
+      fromAccountId?: string;
+      toAccountId?: string;
+      preview: string;
+    }
   | { status: "error"; message: string };
 
 export interface SlipFillData {
   amount?: number;
   date?: string;
   time?: string;
+  type?: "transfer";
   categoryId?: string;
   accountId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
   refNumber?: string;
 }
 
@@ -78,8 +90,11 @@ export function SlipScanner({ categories, accounts, onFill, onClose }: SlipScann
         setState({
           status: "done",
           slip,
+          type: match.type,
           categoryId: match.categoryId,
           accountId: match.accountId,
+          fromAccountId: match.fromAccountId,
+          toAccountId: match.toAccountId,
           preview: previewUrl,
         });
       } catch (err) {
@@ -104,8 +119,11 @@ export function SlipScanner({ categories, accounts, onFill, onClose }: SlipScann
       amount: state.slip.amount,
       date: state.slip.date,
       time: state.slip.time,
+      type: state.type,
       categoryId: state.categoryId,
       accountId: state.accountId,
+      fromAccountId: state.fromAccountId,
+      toAccountId: state.toAccountId,
       refNumber: state.slip.refNumber,
     });
     onClose();
@@ -190,24 +208,33 @@ export function SlipScanner({ categories, accounts, onFill, onClose }: SlipScann
                 label={t("slip.time")}
                 value={state.slip.time}
               />
-              <SlipField
-                confidence="medium"
-                label={t("slip.account")}
-                value={
-                  state.accountId
-                    ? accounts.find((a) => a.id === state.accountId)?.name
-                    : undefined
-                }
-              />
-              <SlipField
-                confidence="low"
-                label={t("slip.category")}
-                value={
-                  state.categoryId
-                    ? categories.find((c) => c.id === state.categoryId)?.name
-                    : undefined
-                }
-              />
+              {state.type === "transfer" ? (
+                <>
+                  <SlipField
+                    confidence="medium"
+                    label={t("slip.fromAccount")}
+                    value={accounts.find((a) => a.id === state.fromAccountId)?.name}
+                  />
+                  <SlipField
+                    confidence="medium"
+                    label={t("slip.toAccount")}
+                    value={accounts.find((a) => a.id === state.toAccountId)?.name}
+                  />
+                </>
+              ) : (
+                <>
+                  <SlipField
+                    confidence="medium"
+                    label={t("slip.account")}
+                    value={accounts.find((a) => a.id === state.accountId)?.name}
+                  />
+                  <SlipField
+                    confidence="low"
+                    label={t("slip.category")}
+                    value={categories.find((c) => c.id === state.categoryId)?.name}
+                  />
+                </>
+              )}
             </div>
           </div>
 

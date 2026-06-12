@@ -194,11 +194,17 @@ const selectedPaymentMethod = form.watch("paymentMethod");
   );
 
   function handleSlipFill(data: SlipFillData) {
+    if (data.type) form.setValue("type", data.type, { shouldValidate: true });
     if (data.amount !== undefined) form.setValue("amount", data.amount, { shouldValidate: true });
     if (data.date) form.setValue("date", data.date, { shouldValidate: true });
     if (data.time) form.setValue("time", data.time, { shouldValidate: true });
-    if (data.categoryId) form.setValue("categoryId", data.categoryId, { shouldValidate: true });
-    if (data.accountId) form.setValue("accountId", data.accountId, { shouldValidate: true });
+    if (data.type === "transfer") {
+      if (data.fromAccountId) form.setValue("fromAccountId", data.fromAccountId, { shouldValidate: true });
+      if (data.toAccountId) form.setValue("toAccountId", data.toAccountId, { shouldValidate: true });
+    } else {
+      if (data.categoryId) form.setValue("categoryId", data.categoryId, { shouldValidate: true });
+      if (data.accountId) form.setValue("accountId", data.accountId, { shouldValidate: true });
+    }
     if (data.refNumber) form.setValue("attachmentNote", data.refNumber, { shouldValidate: true });
   }
 

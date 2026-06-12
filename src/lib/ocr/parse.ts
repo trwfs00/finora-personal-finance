@@ -4,6 +4,7 @@ export interface SlipData {
   time?: string;
   bankName?: string;
   accountSuffix?: string;
+  accountSuffixes?: string[];
   recipientName?: string;
   refNumber?: string;
 }
@@ -128,9 +129,17 @@ export function parseSlipText(text: string): SlipData {
   const bankMatch = BANK_RE.exec(text);
   if (bankMatch) result.bankName = bankMatch[0];
 
-  // Account suffix
-  const acctMatch = ACCT_RE.exec(text);
-  if (acctMatch) result.accountSuffix = acctMatch[0];
+  // Account suffixes — collect all matches (first = sender, second = receiver)
+  const acctGlobal = new RegExp(ACCT_RE.source, "g");
+  const acctMatches: string[] = [];
+  let acctM: RegExpExecArray | null;
+  while ((acctM = acctGlobal.exec(text)) !== null) {
+    acctMatches.push(acctM[0]);
+  }
+  if (acctMatches.length > 0) {
+    result.accountSuffix = acctMatches[0];
+    result.accountSuffixes = acctMatches;
+  }
 
   // Recipient — keyword first, then post-account-suffix line
   const keywordMatch = RECIPIENT_KEYWORD_RE.exec(text);
