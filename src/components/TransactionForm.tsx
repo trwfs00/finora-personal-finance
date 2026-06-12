@@ -1,12 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useMemo } from "react";
+import { ScanLine } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import type { AccountType, Transaction } from "../domain/types";
 import { useFinanceStore } from "../store/finance-store";
+import { SlipScanner, type SlipFillData } from "./SlipScanner";
 import { Button } from "./ui/button";
 import { DatePicker } from "./ui/date-picker";
 import { NoteInput, TagInput } from "./ui/tag-input";
@@ -61,6 +63,7 @@ interface TransactionFormProps {
 
 export function TransactionForm({ transaction, onSaved }: TransactionFormProps) {
   const { t } = useTranslation();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const categories = useFinanceStore((state) => state.categories);
   const accounts = useFinanceStore((state) => state.accounts);
   const transactions = useFinanceStore((state) => state.transactions);
@@ -190,6 +193,14 @@ const selectedPaymentMethod = form.watch("paymentMethod");
     [categories, type],
   );
 
+  function handleSlipFill(data: SlipFillData) {
+    if (data.amount !== undefined) form.setValue("amount", data.amount, { shouldValidate: true });
+    if (data.date) form.setValue("date", data.date, { shouldValidate: true });
+    if (data.time) form.setValue("time", data.time, { shouldValidate: true });
+    if (data.categoryId) form.setValue("categoryId", data.categoryId, { shouldValidate: true });
+    if (data.accountId) form.setValue("accountId", data.accountId, { shouldValidate: true });
+  }
+
   async function onSubmit(values: FormValues) {
     const normalized = {
       type: values.type,
@@ -223,6 +234,28 @@ const selectedPaymentMethod = form.watch("paymentMethod");
 
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+      {!transaction && (
+        <div>
+          {scannerOpen ? (
+            <SlipScanner
+              accounts={accounts}
+              categories={categories}
+              onClose={() => setScannerOpen(false)}
+              onFill={handleSlipFill}
+            />
+          ) : (
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80"
+              onClick={() => setScannerOpen(true)}
+            >
+              <ScanLine className="h-3.5 w-3.5" />
+              {t("slip.scanButton")}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Field label={t("form.type")} htmlFor="type" error={form.formState.errors.type?.message}>
           <Select

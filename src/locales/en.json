@@ -319,6 +319,27 @@
     "saveTx": "Save transaction",
     "addTx": "Add transaction"
   },
+  "slip": {
+    "title": "Scan slip",
+    "scanButton": "Scan from slip",
+    "uploadPrompt": "Choose a slip image",
+    "uploadHint": "JPEG, PNG, WEBP — processed locally on this device",
+    "preparing": "Preparing image…",
+    "loadingModel": "Loading OCR model…",
+    "recognizing": "Reading text…",
+    "preview": "Slip preview",
+    "amount": "Amount",
+    "date": "Date",
+    "time": "Time",
+    "account": "Account",
+    "category": "Category",
+    "notFound": "—",
+    "reviewHint": "Review the extracted values before applying. Category match may be inaccurate.",
+    "apply": "Fill form",
+    "rescan": "Scan again",
+    "retry": "Try again",
+    "error": "Could not read the slip"
+  },
   "budgetForm": {
     "month": "Month",
     "monthHint": "Use YYYY-MM",
