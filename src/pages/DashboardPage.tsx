@@ -9,16 +9,17 @@ import {
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { CashFlowChart, CategoryDonutChart, DONUT_COLORS } from "../components/Charts";
+import { CashFlowChart, CategoryDonutChart, DONUT_COLORS, NetWorthSparkline } from "../components/Charts";
 import { Button } from "../components/ui/button";
 import { MonthPicker } from "../components/ui/date-picker";
 import { EmptyState } from "../components/ui/empty-state";
 import { Progress } from "../components/ui/progress";
-import { calculateDashboardMetrics, type InsightData } from "../domain/calculations";
+import { calculateDashboardMetrics, calculateNetWorthHistory, type InsightData } from "../domain/calculations";
 import type { Category } from "../domain/types";
 import { currentMonthKey, formatCurrency, formatPercent } from "../lib/format";
 import { cn } from "../lib/utils";
 import { useFinanceStore } from "../store/finance-store";
+import { Link } from "react-router-dom";
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -66,6 +67,20 @@ export function DashboardPage() {
   const donutTotal = categoryChartData.reduce((sum, d) => sum + d.amount, 0);
   const hasTransactions = transactions.length > 0;
 
+  const netWorthHistory = useMemo(
+    () => calculateNetWorthHistory(accounts, transactions, 12),
+    [accounts, transactions],
+  );
+
+  const hasNetWorthAccounts = accounts.some((a) => a.includeInNetWorth);
+
+  const netWorthMoM = useMemo(() => {
+    if (netWorthHistory.length < 2) return null;
+    const prev = netWorthHistory[netWorthHistory.length - 2].netWorth;
+    const curr = netWorthHistory[netWorthHistory.length - 1].netWorth;
+    return curr - prev;
+  }, [netWorthHistory]);
+
   const monthlyData = useMemo(() => {
     const map = new Map<string, { income: number; expense: number }>();
     for (const tx of transactions) {
@@ -82,18 +97,15 @@ export function DashboardPage() {
       .map(([date, v]) => ({ date, ...v }));
   }, [transactions]);
 
-  const MONTHS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
+  const monthsAbbr = t("datePicker.monthsAbbr", { returnObjects: true }) as string[];
 
   function dailyTick(v: string) {
     const [, m, d] = v.split("-");
-    return `${parseInt(d, 10)} ${MONTHS[parseInt(m, 10) - 1]}`;
+    return `${parseInt(d, 10)} ${monthsAbbr[parseInt(m, 10) - 1]}`;
   }
   function monthlyTick(v: string) {
     const [, m] = v.split("-");
-    return MONTHS[parseInt(m, 10) - 1];
+    return monthsAbbr[parseInt(m, 10) - 1] ?? v;
   }
   function yearlyTick(v: string) {
     return v;
@@ -261,6 +273,39 @@ export function DashboardPage() {
                 ))}
               </div>
             </aside>
+          )}
+
+          {/* Net Worth sparkline */}
+          {hasNetWorthAccounts && (
+            <section aria-label={t("dashboard.netWorthTrend")}>
+              <div className="panel p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted">{t("dashboard.netWorthTrend")}</p>
+                    <p className="mt-1 text-2xl font-bold tabular text-ink">
+                      {formatCurrency(metrics.netWorth, settings)}
+                    </p>
+                    {netWorthMoM !== null && (
+                      <p className={cn("mt-0.5 text-sm tabular", netWorthMoM >= 0 ? "text-success" : "text-danger")}>
+                        {netWorthMoM >= 0 ? "+" : ""}
+                        {formatCurrency(netWorthMoM, settings)}
+                        {" "}
+                        {t("dashboard.vsLastMonth")}
+                      </p>
+                    )}
+                  </div>
+                  <Link
+                    className="shrink-0 text-xs text-muted underline-offset-2 transition-colors hover:text-ink hover:underline"
+                    to="/analytics"
+                  >
+                    {t("dashboard.viewHistory")} →
+                  </Link>
+                </div>
+                <div className="mt-4">
+                  <NetWorthSparkline data={netWorthHistory} settings={settings} />
+                </div>
+              </div>
+            </section>
           )}
 
           {/* Main grid — flat 4-cell so rows align across columns */}

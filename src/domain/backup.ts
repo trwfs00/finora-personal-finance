@@ -9,6 +9,7 @@ import type {
   Budget,
   Category,
   RecurringTransaction,
+  SavingsGoal,
   StoredData,
   Transaction,
 } from "./types";
@@ -19,6 +20,7 @@ export function createBackup(input: {
   accounts: Account[];
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
+  savingsGoals: SavingsGoal[];
   settings: AppSettings;
 }): BackupData {
   return {
@@ -30,6 +32,7 @@ export function createBackup(input: {
     accounts: input.accounts,
     budgets: input.budgets,
     recurringTransactions: input.recurringTransactions,
+    savingsGoals: input.savingsGoals,
     settings: input.settings,
   };
 }
@@ -80,6 +83,7 @@ export function parseBackupData(json: string): BackupData {
     accounts: result.data.accounts,
     budgets: result.data.budgets,
     recurringTransactions: result.data.recurringTransactions,
+    savingsGoals: result.data.savingsGoals ?? [],
     settings: result.data.settings,
   };
 }
@@ -93,6 +97,7 @@ export function parseBackup(json: string): StoredData {
     accounts: result.accounts,
     budgets: result.budgets,
     recurringTransactions: result.recurringTransactions,
+    savingsGoals: result.savingsGoals ?? [],
     settings: result.settings,
   };
 }

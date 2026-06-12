@@ -45,6 +45,7 @@ describe("IndexedDB repository", () => {
       accounts: [],
       budgets: [],
       recurringTransactions: [],
+      savingsGoals: [],
       settings: { ...DEFAULT_SETTINGS, theme: "dark" },
     });
     await replaceAllData(backup);

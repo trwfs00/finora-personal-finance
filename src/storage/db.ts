@@ -6,6 +6,7 @@ import type {
   Budget,
   Category,
   RecurringTransaction,
+  SavingsGoal,
   Transaction,
 } from "../domain/types";
 
@@ -25,6 +26,7 @@ export class FinanceDatabase extends Dexie {
   accounts!: EntityTable<Account, "id">;
   budgets!: EntityTable<Budget, "id">;
   recurringTransactions!: EntityTable<RecurringTransaction, "id">;
+  savingsGoals!: EntityTable<SavingsGoal, "id">;
   settings!: EntityTable<SettingsRecord, "id">;
   metadata!: EntityTable<MetadataRecord, "key">;
 
@@ -40,6 +42,10 @@ export class FinanceDatabase extends Dexie {
       recurringTransactions: "&id, nextRunDate, isActive",
       settings: "&id",
       metadata: "&key",
+    });
+
+    this.version(2).stores({
+      savingsGoals: "&id, isArchived",
     });
   }
 }

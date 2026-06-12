@@ -66,6 +66,7 @@ export function SettingsPage() {
   const categories = useFinanceStore(state => state.categories)
   const accounts = useFinanceStore(state => state.accounts)
   const budgets = useFinanceStore(state => state.budgets)
+  const savingsGoals = useFinanceStore(state => state.savingsGoals)
   const recurringTransactions = useFinanceStore(
     state => state.recurringTransactions,
   )
@@ -108,6 +109,7 @@ export function SettingsPage() {
       accounts,
       budgets,
       recurringTransactions,
+      savingsGoals,
       settings,
     })
     downloadFile(
