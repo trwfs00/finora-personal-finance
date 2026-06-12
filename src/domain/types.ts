@@ -18,6 +18,7 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   date: string;
+  time?: string;
   categoryId?: string;
   fromAccountId?: string;
   toAccountId?: string;

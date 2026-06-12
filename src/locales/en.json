@@ -267,6 +267,8 @@
     "amountError": "Amount must be greater than 0",
     "date": "Date",
     "dateError": "Date is required",
+    "time": "Time",
+    "timeError": "Invalid time",
     "category": "Category",
     "categoryError": "Choose a category",
     "account": "Account",
@@ -352,6 +354,11 @@
       "November",
       "December"
     ]
+  },
+  "timePicker": {
+    "pickTime": "Pick a time",
+    "hour": "Hour",
+    "minute": "Min"
   },
   "onboarding": {
     "title": "Welcome to Finora",

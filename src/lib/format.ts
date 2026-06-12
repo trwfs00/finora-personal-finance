@@ -34,6 +34,10 @@ export function formatDate(value: string, pattern = "dd MMM yyyy") {
   return format(parseISO(value), pattern);
 }
 
+export function formatTime(isoString: string) {
+  return format(parseISO(isoString), "HH:mm");
+}
+
 export function currentMonthKey(date = new Date()) {
   return format(date, "yyyy-MM");
 }

@@ -52,6 +52,11 @@ export function DashboardPage() {
     [categories],
   );
 
+  const accountMap = useMemo(
+    () => new Map(accounts.map((a) => [a.id, a])),
+    [accounts],
+  );
+
   const categoryChartData = metrics.topCategories.map((item) => ({
     name: item.category.name,
     amount: item.amount,
@@ -409,7 +414,16 @@ export function DashboardPage() {
                               {tx.note ||
                                 (tx.type === "income"
                                   ? t("common.income")
-                                  : t("common.expense"))}
+                                  : tx.type === "transfer"
+                                    ? t("common.transfer")
+                                    : t("common.expense"))}
+                              {tx.type === "transfer" && (
+                                <span className="ml-1.5 font-normal text-muted">
+                                  {accountMap.get(tx.fromAccountId ?? "")?.name ?? ""}
+                                  {" → "}
+                                  {accountMap.get(tx.toAccountId ?? "")?.name ?? ""}
+                                </span>
+                              )}
                             </p>
                             <p className="mt-0.5 text-xs text-muted sm:hidden">
                               {tx.date}
@@ -551,7 +565,12 @@ function CategoryBadge({
 }) {
   const { t } = useTranslation();
   const name =
-    category?.name ?? (txType === "income" ? t("common.income") : t("common.expense"));
+    category?.name ??
+    (txType === "income"
+      ? t("common.income")
+      : txType === "transfer"
+        ? t("common.transfer")
+        : t("common.expense"));
   const dotColor =
     category?.color ??
     (txType === "income" ? "oklch(0.56 0.16 145)" : "oklch(var(--muted))");
