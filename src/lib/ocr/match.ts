@@ -24,7 +24,20 @@ export function matchSlip(
     if (matches.length > 0) result.categoryId = matches[0].item.id;
   }
 
-  if (slip.bankName || slip.accountSuffix) {
+  // Digit-substring match first: extract ≥3-digit runs from slip suffix, check stored accountNumber
+  if (slip.accountSuffix) {
+    const slipRuns = slip.accountSuffix.match(/\d{3,}/g) ?? [];
+    if (slipRuns.length > 0) {
+      const matched = accounts.find((acc) => {
+        if (!acc.accountNumber) return false;
+        const stored = acc.accountNumber.replace(/\D/g, "");
+        return slipRuns.some((run) => stored.includes(run));
+      });
+      if (matched) result.accountId = matched.id;
+    }
+  }
+  // Fallback: fuzzy match against account name
+  if (!result.accountId && (slip.bankName || slip.accountSuffix)) {
     const query = [slip.bankName, slip.accountSuffix].filter(Boolean).join(" ");
     const fuseAccounts = new Fuse(accounts, { keys: ["name"], threshold: 0.45 });
     const matches = fuseAccounts.search(query);

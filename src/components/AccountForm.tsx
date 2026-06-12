@@ -33,6 +33,7 @@ type AccountFormValues = {
   creditLimit?: number | ""
   currency: string
   color?: string
+  accountNumber?: string
   includeInNetWorth: boolean
 }
 
@@ -69,6 +70,7 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
           ),
         currency: z.string().trim().min(1),
         color: z.string().optional(),
+        accountNumber: z.string().max(6).optional(),
         includeInNetWorth: z.boolean(),
       }),
     [t],
@@ -83,12 +85,14 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
       creditLimit: account?.creditLimit,
       currency: account?.currency ?? "THB",
       color: account?.color ?? CATEGORY_SWATCHES[0],
+      accountNumber: account?.accountNumber ?? "",
       includeInNetWorth: account?.includeInNetWorth ?? true,
     },
   })
 
   const selectedType = form.watch("type")
   const selectedColor = form.watch("color") ?? CATEGORY_SWATCHES[0]
+  const hasAccountNumber = selectedType !== "cash"
   const balanceValue = form.watch("initialBalance")
   const isNegative = Number(balanceValue) < 0
 
@@ -107,6 +111,7 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
         isCreditAccount && typeof values.creditLimit === "number"
           ? values.creditLimit
           : undefined,
+      accountNumber: values.accountNumber?.trim() || undefined,
     }
     if (account) {
       await updateAccount(account.id, payload)
@@ -185,6 +190,22 @@ export function AccountForm({ account, onSaved }: AccountFormProps) {
           </div>
         </Field>
       </div>
+
+      {hasAccountNumber && (
+        <Field
+          label={t("accounts.formAccountNumber")}
+          htmlFor='account-number'
+          hint={t("accounts.formAccountNumberHint")}
+        >
+          <Input
+            id='account-number'
+            maxLength={6}
+            inputMode='numeric'
+            placeholder='123456'
+            {...form.register("accountNumber")}
+          />
+        </Field>
+      )}
 
       {isCreditAccount ? (
         <>

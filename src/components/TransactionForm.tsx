@@ -199,6 +199,7 @@ const selectedPaymentMethod = form.watch("paymentMethod");
     if (data.time) form.setValue("time", data.time, { shouldValidate: true });
     if (data.categoryId) form.setValue("categoryId", data.categoryId, { shouldValidate: true });
     if (data.accountId) form.setValue("accountId", data.accountId, { shouldValidate: true });
+    if (data.refNumber) form.setValue("attachmentNote", data.refNumber, { shouldValidate: true });
   }
 
   async function onSubmit(values: FormValues) {

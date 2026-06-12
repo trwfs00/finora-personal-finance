@@ -5,6 +5,7 @@ export interface SlipData {
   bankName?: string;
   accountSuffix?: string;
   recipientName?: string;
+  refNumber?: string;
 }
 
 // ─── Amount ───────────────────────────────────────────────────────────────────
@@ -38,6 +39,10 @@ const BANK_RE =
 // ─── Account suffix ───────────────────────────────────────────────────────────
 // Matches: xxx-x-x3526-x  |  XXX-X-XX307-0  |  0203xxxx1174  |  x-xxxx-xxxx0-55-4  |  x-xxxx-xxxx9-74-7  |  x-5283  |  **** ******* 0003
 const ACCT_RE = /(?:(?:[xX*]{2,}|[xX*](?=-))[\d\-xX*]*\d[\d\-xX*]*|\d+[xX*]{3,}\d+|[xX*]{2,}(?:\s+[xX*]+)+\s*\d+)/;
+
+// ─── Reference number ─────────────────────────────────────────────────────────
+const REF_RE =
+  /(?:เลขที่รายการ|เลขที่อ้างอิง|หลักอ้างอิง|รหัสอ้างอิง|หมายเลขอ้างอิง|เลขอ้างอิง|Ref\.?No\.?)[:\s]+([^\n\r]+)/i;
 
 // ─── Recipient ────────────────────────────────────────────────────────────────
 // Keyword-based: mymo "ถึง", Krungthai "ไปยัง", Bangkok Bank "ไปที่", others
@@ -134,6 +139,10 @@ export function parseSlipText(text: string): SlipData {
   } else {
     result.recipientName = extractRecipientAfterAccount(text);
   }
+
+  // Reference number
+  const refMatch = REF_RE.exec(text);
+  if (refMatch) result.refNumber = refMatch[1].trim();
 
   return result;
 }

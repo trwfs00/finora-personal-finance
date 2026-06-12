@@ -22,6 +22,7 @@ export interface SlipFillData {
   time?: string;
   categoryId?: string;
   accountId?: string;
+  refNumber?: string;
 }
 
 interface SlipScannerProps {
@@ -105,6 +106,7 @@ export function SlipScanner({ categories, accounts, onFill, onClose }: SlipScann
       time: state.slip.time,
       categoryId: state.categoryId,
       accountId: state.accountId,
+      refNumber: state.slip.refNumber,
     });
     onClose();
   }
