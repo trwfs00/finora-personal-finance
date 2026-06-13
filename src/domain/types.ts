@@ -51,6 +51,7 @@ export interface Account {
   creditLimit?: number;
   currency: string;
   color?: string;
+  accountNumber?: string;
   includeInNetWorth: boolean;
   createdAt: string;
   updatedAt: string;

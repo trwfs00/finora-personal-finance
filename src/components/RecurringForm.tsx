@@ -219,7 +219,12 @@ export function RecurringForm({ recurring, onSaved }: RecurringFormProps) {
       </div>
 
       {type === "transfer" ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        // Distinct key from the expense branch: both render the same
+        // <div><Field><Select/>×2> shape, so React would reconcile the Category
+        // select into the From select (different item sets) and Radix fires
+        // onValueChange("") during the swap, clearing fromAccountId. See
+        // TransactionForm for the full write-up.
+        <div key="transfer-accounts" className="grid gap-4 sm:grid-cols-2">
           <Field label={t("form.fromAccount")} htmlFor="r-from" error={form.formState.errors.fromAccountId?.message}>
             <Select onValueChange={(v) => form.setValue("fromAccountId", v, { shouldValidate: true })} value={selectedFromAccountId}>
               <SelectTrigger id="r-from"><SelectValue placeholder={t("form.selectAccount")} /></SelectTrigger>
@@ -252,7 +257,7 @@ export function RecurringForm({ recurring, onSaved }: RecurringFormProps) {
           </Field>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div key="entry-category-account" className="grid gap-4 sm:grid-cols-2">
           <Field label={t("form.category")} htmlFor="r-cat" error={form.formState.errors.categoryId?.message}>
             <Select onValueChange={(v) => form.setValue("categoryId", v, { shouldValidate: true })} value={selectedCategoryId}>
               <SelectTrigger id="r-cat"><SelectValue placeholder={t("form.category")} /></SelectTrigger>
