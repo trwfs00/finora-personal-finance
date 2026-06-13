@@ -2,11 +2,13 @@ import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { AccountsPage } from "./pages/AccountsPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { BudgetsPage } from "./pages/BudgetsPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { DebtsPage } from "./pages/DebtsPage";
 import { GoalsPage } from "./pages/GoalsPage";
 import { RecurringPage } from "./pages/RecurringPage";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -16,6 +18,7 @@ import { useFinanceStore } from "./store/finance-store";
 export function App() {
   return (
     <BrowserRouter>
+      <TooltipProvider>
       <ThemeSync />
       <Routes>
         <Route element={<AppShell />} path="/">
@@ -26,10 +29,12 @@ export function App() {
           <Route element={<AccountsPage />} path="accounts" />
           <Route element={<RecurringPage />} path="recurring" />
           <Route element={<GoalsPage />} path="goals" />
+          <Route element={<DebtsPage />} path="debts" />
           <Route element={<CalendarPage />} path="calendar" />
           <Route element={<SettingsPage />} path="settings" />
         </Route>
       </Routes>
+      </TooltipProvider>
     </BrowserRouter>
   );
 }

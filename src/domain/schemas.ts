@@ -151,6 +151,44 @@ export const recurringTransactionSchema = z.object({
   isActive: z.boolean(),
 });
 
+export const debtTypeSchema = z.enum([
+  "credit_card",
+  "personal_loan",
+  "cash_advance",
+  "bnpl",
+  "car_loan",
+  "mortgage",
+  "student_loan",
+  "informal",
+  "other",
+]);
+
+export const interestRateTypeSchema = z.enum(["fixed", "floating", "none"]);
+export const paymentStructureSchema = z.enum(["fixed_installment", "revolving", "manual"]);
+
+export const debtSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1, "Debt name is required"),
+  type: debtTypeSchema,
+  creditor: z.string().trim().min(1, "Creditor is required"),
+  principal: z.coerce.number().positive("Principal must be greater than 0"),
+  interestRate: z.coerce.number().min(0).default(0),
+  interestRateType: interestRateTypeSchema,
+  paymentStructure: paymentStructureSchema,
+  minimumPayment: z.coerce.number().nonnegative().default(0),
+  extraPayment: z.coerce.number().min(0).default(0),
+  paymentDueDay: z.number().int().min(1).max(31).optional(),
+  startDate: isoDateSchema,
+  linkedAccountId: z.string().optional(),
+  rateBenchmark: z.string().optional(),
+  rateSpread: z.number().optional(),
+  color: z.string().optional(),
+  note: z.string().optional(),
+  isArchived: z.boolean().default(false),
+  createdAt: isoDateSchema,
+  updatedAt: isoDateSchema,
+});
+
 export const savingsGoalSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1, "Goal name is required"),
@@ -176,6 +214,8 @@ export const settingsSchema = z.object({
   numberFormat: z.string().min(1),
   backupReminder: z.boolean(),
   backupReminderFrequency: z.enum(["weekly", "monthly"]),
+  mrrRates: z.record(z.number()).optional(),
+  accountOrder: z.array(z.string()).optional(),
 });
 
 export const backupSchema = z.object({
@@ -188,6 +228,7 @@ export const backupSchema = z.object({
   budgets: z.array(budgetSchema),
   recurringTransactions: z.array(recurringTransactionSchema),
   savingsGoals: z.array(savingsGoalSchema).optional().default([]),
+  debts: z.array(debtSchema).optional().default([]),
   settings: settingsSchema,
 });
 

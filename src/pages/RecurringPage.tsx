@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { HelpButton } from "../components/help/HelpButton";
+import { Tooltip } from "../components/ui/tooltip";
 import { RecurringForm } from "../components/RecurringForm";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -291,7 +292,7 @@ function RecurringCard({
         </div>
         <p className="mt-0.5 truncate text-xs text-muted">
           {category?.name ?? accountLabel}
-          {recurring.endDate ? ` · ends ${recurring.endDate}` : ""}
+          {recurring.endDate ? ` · ${t("recurring.ends")} ${recurring.endDate}` : ""}
         </p>
       </div>
 
@@ -305,20 +306,26 @@ function RecurringCard({
       </div>
 
       <div className="flex shrink-0 gap-1">
-        <Button aria-label={t("common.edit")} onClick={onEdit} size="icon" variant="ghost">
-          <Pencil aria-hidden className="h-4 w-4" />
-        </Button>
-        <Button
-          aria-label={isActive ? t("recurring.pauseLabel") : t("recurring.resumeLabel")}
-          onClick={onTogglePause}
-          size="icon"
-          variant="ghost"
-        >
-          {isActive ? <Pause aria-hidden className="h-4 w-4" /> : <Play aria-hidden className="h-4 w-4" />}
-        </Button>
-        <Button aria-label={t("common.delete")} onClick={onDelete} size="icon" variant="ghost">
-          <Trash2 aria-hidden className="h-4 w-4" />
-        </Button>
+        <Tooltip label={t("common.edit")}>
+          <Button aria-label={t("common.edit")} onClick={onEdit} size="icon" variant="ghost">
+            <Pencil aria-hidden className="h-4 w-4" />
+          </Button>
+        </Tooltip>
+        <Tooltip label={isActive ? t("recurring.pauseLabel") : t("recurring.resumeLabel")}>
+          <Button
+            aria-label={isActive ? t("recurring.pauseLabel") : t("recurring.resumeLabel")}
+            onClick={onTogglePause}
+            size="icon"
+            variant="ghost"
+          >
+            {isActive ? <Pause aria-hidden className="h-4 w-4" /> : <Play aria-hidden className="h-4 w-4" />}
+          </Button>
+        </Tooltip>
+        <Tooltip label={t("common.delete")}>
+          <Button aria-label={t("common.delete")} onClick={onDelete} size="icon" variant="ghost">
+            <Trash2 aria-hidden className="h-4 w-4" />
+          </Button>
+        </Tooltip>
       </div>
     </div>
   );

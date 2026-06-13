@@ -1,4 +1,4 @@
-export type GuidePage = "accounts" | "transactions" | "budgets" | "settings" | "recurring" | "goals";
+export type GuidePage = "accounts" | "transactions" | "budgets" | "settings" | "recurring" | "goals" | "debts";
 
 export interface GuideUseCase {
   id: string;
@@ -429,6 +429,89 @@ export const PAGE_GUIDES: PageGuide[] = [
           "guides.goals.archive.step1",
           "guides.goals.archive.step2",
           "guides.goals.archive.step3",
+        ],
+      },
+    ],
+  },
+  {
+    page: "debts",
+    titleKey: "guides.debts.title",
+    introKey: "guides.debts.intro",
+    useCases: [
+      {
+        id: "presets",
+        titleKey: "guides.debts.presets.title",
+        descriptionKey: "guides.debts.presets.description",
+        stepsKeys: [],
+        recommendedFields: [
+          { labelKey: "debts.typeCredit",   valueKey: "guides.debts.presets.creditCard" },
+          { labelKey: "debts.typePersonal", valueKey: "guides.debts.presets.personalLoan" },
+          { labelKey: "debts.typeCash",     valueKey: "guides.debts.presets.cashAdvance" },
+          { labelKey: "debts.typeBnpl",     valueKey: "guides.debts.presets.bnpl" },
+          { labelKey: "debts.typeCar",      valueKey: "guides.debts.presets.carLoan" },
+          { labelKey: "debts.typeMortgage", valueKey: "guides.debts.presets.mortgage" },
+          { labelKey: "debts.typeStudent",  valueKey: "guides.debts.presets.studentLoan" },
+          { labelKey: "debts.typeInformal", valueKey: "guides.debts.presets.informal" },
+          { labelKey: "debts.typeOther",    valueKey: "guides.debts.presets.other" },
+        ],
+      },
+      {
+        id: "add-debt",
+        titleKey: "guides.debts.addDebt.title",
+        descriptionKey: "guides.debts.addDebt.description",
+        stepsKeys: [
+          "guides.debts.addDebt.step1",
+          "guides.debts.addDebt.step2",
+          "guides.debts.addDebt.step3",
+          "guides.debts.addDebt.step4",
+        ],
+      },
+      {
+        id: "linked-account",
+        titleKey: "guides.debts.linkedAccount.title",
+        descriptionKey: "guides.debts.linkedAccount.description",
+        stepsKeys: [
+          "guides.debts.linkedAccount.step1",
+          "guides.debts.linkedAccount.step2",
+          "guides.debts.linkedAccount.step3",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.fields.accountType", valueKey: "guides.values.debtAccount" },
+        ],
+      },
+      {
+        id: "floating-rate",
+        titleKey: "guides.debts.floatingRate.title",
+        descriptionKey: "guides.debts.floatingRate.description",
+        stepsKeys: [
+          "guides.debts.floatingRate.step1",
+          "guides.debts.floatingRate.step2",
+          "guides.debts.floatingRate.step3",
+          "guides.debts.floatingRate.step4",
+        ],
+        recommendedFields: [
+          { labelKey: "guides.debts.fields.rateType", value: "MRR-based (floating)" },
+        ],
+        warningKey: "guides.debts.floatingRate.warning",
+      },
+      {
+        id: "what-if",
+        titleKey: "guides.debts.whatIf.title",
+        descriptionKey: "guides.debts.whatIf.description",
+        stepsKeys: [
+          "guides.debts.whatIf.step1",
+          "guides.debts.whatIf.step2",
+          "guides.debts.whatIf.step3",
+        ],
+      },
+      {
+        id: "strategy",
+        titleKey: "guides.debts.strategy.title",
+        descriptionKey: "guides.debts.strategy.description",
+        stepsKeys: [
+          "guides.debts.strategy.step1",
+          "guides.debts.strategy.step2",
+          "guides.debts.strategy.step3",
         ],
       },
     ],

@@ -5,6 +5,7 @@ import type {
   AppSettings,
   Budget,
   Category,
+  Debt,
   RecurringTransaction,
   SavingsGoal,
   Transaction,
@@ -27,6 +28,7 @@ export class FinanceDatabase extends Dexie {
   budgets!: EntityTable<Budget, "id">;
   recurringTransactions!: EntityTable<RecurringTransaction, "id">;
   savingsGoals!: EntityTable<SavingsGoal, "id">;
+  debts!: EntityTable<Debt, "id">;
   settings!: EntityTable<SettingsRecord, "id">;
   metadata!: EntityTable<MetadataRecord, "key">;
 
@@ -46,6 +48,10 @@ export class FinanceDatabase extends Dexie {
 
     this.version(2).stores({
       savingsGoals: "&id, isArchived",
+    });
+
+    this.version(3).stores({
+      debts: "&id, type, isArchived, linkedAccountId",
     });
   }
 }

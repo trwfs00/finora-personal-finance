@@ -118,6 +118,7 @@ export function buildDemoData(today = new Date()) {
     budgets,
     recurringTransactions,
     savingsGoals: [],
+    debts: [],
   };
 }
 
