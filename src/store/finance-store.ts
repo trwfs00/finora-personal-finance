@@ -21,6 +21,7 @@ import type {
   Transaction,
   TransactionDraft,
 } from "../domain/types";
+import { DEFAULT_MOBILE_NAV_ITEMS } from "../domain/navigation";
 import * as repository from "../storage/repository";
 
 interface FinanceState extends FinanceData {
@@ -77,6 +78,7 @@ const emptyData: FinanceData = {
     numberFormat: "en-TH",
     backupReminder: true,
     backupReminderFrequency: "monthly",
+    mobileNavItems: DEFAULT_MOBILE_NAV_ITEMS,
   },
   demoLoaded: false,
 };

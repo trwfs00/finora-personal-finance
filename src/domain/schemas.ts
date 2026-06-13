@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MOBILE_NAV_ITEM_IDS } from "./navigation";
+
 export const transactionTypeSchema = z.enum(["income", "expense", "transfer"]);
 export const categoryTypeSchema = z.enum(["income", "expense"]);
 export const accountTypeSchema = z.enum([
@@ -216,6 +218,7 @@ export const settingsSchema = z.object({
   backupReminderFrequency: z.enum(["weekly", "monthly"]),
   mrrRates: z.record(z.number()).optional(),
   accountOrder: z.array(z.string()).optional(),
+  mobileNavItems: z.array(z.enum(MOBILE_NAV_ITEM_IDS)).max(4).optional(),
 });
 
 export const backupSchema = z.object({

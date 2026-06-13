@@ -27,6 +27,11 @@ import { useTranslation } from "react-i18next"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 import logoUrl from "../assets/logo.svg"
+import {
+  DEFAULT_MOBILE_NAV_ITEMS,
+  normalizeMobileNavItems,
+  type MobileNavItemId,
+} from "../domain/navigation"
 import { useShortcutKey } from "../hooks/useShortcutKey"
 import i18n from "../i18n"
 import { cn } from "../lib/utils"
@@ -155,22 +160,26 @@ export function AppShell() {
     { href: "/settings", label: t("nav.settings"), icon: Settings },
   ]
 
-  // Mobile nav: 4 primary tabs + "More" drawer for the rest
-  const primaryNavItems = [
-    { href: "/", label: t("nav.overview"), icon: LayoutDashboard },
-    { href: "/transactions", label: t("nav.transactions"), icon: ReceiptText },
-    { href: "/accounts", label: t("nav.accounts"), icon: WalletCards },
-    { href: "/budgets", label: t("nav.budgets"), icon: CircleDollarSign },
-  ]
-
-  const secondaryNavItems = [
-    { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
-    { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
-    { href: "/goals", label: t("nav.goals"), icon: Target },
-    { href: "/debts", label: t("nav.debts"), icon: CreditCard },
-    { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
-    { href: "/settings", label: t("nav.settings"), icon: Settings },
-  ]
+  // Mobile nav: user-selected primary tabs + "More" drawer for the rest
+  const mobileNavItemsById = {
+    overview: { href: "/", label: t("nav.overview"), icon: LayoutDashboard },
+    transactions: { href: "/transactions", label: t("nav.transactions"), icon: ReceiptText },
+    accounts: { href: "/accounts", label: t("nav.accounts"), icon: WalletCards },
+    budgets: { href: "/budgets", label: t("nav.budgets"), icon: CircleDollarSign },
+    analytics: { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
+    recurring: { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
+    goals: { href: "/goals", label: t("nav.goals"), icon: Target },
+    debts: { href: "/debts", label: t("nav.debts"), icon: CreditCard },
+    calendar: { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
+    settings: { href: "/settings", label: t("nav.settings"), icon: Settings },
+  } satisfies Record<MobileNavItemId, { href: string; label: string; icon: typeof LayoutDashboard }>
+  const primaryMobileNavIds = normalizeMobileNavItems(
+    settings.mobileNavItems ?? DEFAULT_MOBILE_NAV_ITEMS,
+  )
+  const primaryNavItems = primaryMobileNavIds.map(id => mobileNavItemsById[id])
+  const secondaryNavItems = Object.entries(mobileNavItemsById)
+    .filter(([id]) => !primaryMobileNavIds.includes(id as MobileNavItemId))
+    .map(([, item]) => item)
 
   const isSecondaryActive = secondaryNavItems.some(
     ({ href }) =>
@@ -369,12 +378,12 @@ export function AppShell() {
       </main>
 
       {/* Quick-add FAB */}
-      <div className='fixed bottom-20 right-4 z-30 flex flex-col items-end gap-2 lg:bottom-6'>
+      <div className='pointer-events-none fixed bottom-20 right-4 z-30 flex flex-col items-end gap-2 lg:bottom-6'>
         <div
           className={cn(
             "flex flex-col items-end gap-2 transition-all duration-200 ease-out",
             quickAddMenuOpen
-              ? "translate-y-0 opacity-100"
+              ? "pointer-events-auto translate-y-0 opacity-100"
               : "pointer-events-none translate-y-2 opacity-0",
           )}
         >
@@ -402,7 +411,7 @@ export function AppShell() {
         <button
           aria-expanded={quickAddMenuOpen}
           aria-label={t("shell.quickAddFab")}
-          className='relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-xl active:scale-95'
+          className='pointer-events-auto relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-xl active:scale-95'
           onClick={() => setQuickAddMenuOpen(open => !open)}
           type='button'
         >

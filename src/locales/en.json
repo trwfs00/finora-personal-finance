@@ -201,7 +201,15 @@
     "noTransactions": "No transactions on this day",
     "less": "Less",
     "more": "More",
-    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+    "weekdays": [
+      "Mo",
+      "Tu",
+      "We",
+      "Th",
+      "Fr",
+      "Sa",
+      "Su"
+    ]
   },
   "accounts": {
     "title": "Accounts",
@@ -300,7 +308,11 @@
     "restoreLabel": "Restore backup",
     "clearTitle": "Clear all local data?",
     "clearDesc": "This permanently removes all transactions, budgets, accounts, and categories from this browser.",
-    "clearLabel": "Clear all data"
+    "clearLabel": "Clear all data",
+    "mobileAppbarMenu": "Mobile appbar menu",
+    "mobileAppbarMenuDesc": "Choose up to 4 tabs to show in the mobile bottom bar. The rest stay under Menu.",
+    "mobileAppbarSelected": "{{count}}/4 selected",
+    "resetDefault": "Reset default"
   },
   "form": {
     "type": "Type",
