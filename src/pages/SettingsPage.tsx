@@ -29,6 +29,11 @@ import {
   createTransactionCsv,
   parseBackup,
 } from "../domain/backup"
+import {
+  DEFAULT_MOBILE_NAV_ITEMS,
+  MOBILE_NAV_ITEM_IDS,
+  type MobileNavItemId,
+} from "../domain/navigation"
 import { MRR_RATES } from "../lib/debt-presets"
 import { downloadFile } from "../lib/format"
 import i18n from "../i18n"
@@ -61,6 +66,28 @@ const DATE_FORMAT_OPTIONS = [
   { pattern: "d MMMM yyyy", example: "31 December 2024" },
 ] as const
 
+const MOBILE_NAV_LABEL_KEYS = {
+  overview: "nav.overview",
+  transactions: "nav.transactions",
+  accounts: "nav.accounts",
+  budgets: "nav.budgets",
+  analytics: "nav.analytics",
+  recurring: "nav.recurring",
+  goals: "nav.goals",
+  debts: "nav.debts",
+  calendar: "nav.calendar",
+  settings: "nav.settings",
+} satisfies Record<MobileNavItemId, string>
+
+function settingsValueEquals(a: unknown, b: unknown) {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false
+    if (a.length !== b.length) return false
+    return a.every((value, index) => value === b[index])
+  }
+  return a === b
+}
+
 export function SettingsPage() {
   const { t } = useTranslation()
   const transactions = useFinanceStore(state => state.transactions)
@@ -90,7 +117,7 @@ export function SettingsPage() {
   const isDirty = useMemo(() => {
     if (draftLang !== (i18n.language ?? "en")) return true
     return (Object.keys(draft) as Array<keyof typeof draft>).some(
-      k => draft[k] !== settings[k],
+      k => !settingsValueEquals(draft[k], settings[k]),
     )
   }, [draft, draftLang, settings])
 
@@ -178,6 +205,21 @@ export function SettingsPage() {
     setDraft({ ...settings })
     setDraftLang(i18n.language ?? "en")
   }
+
+  function toggleMobileNavItem(id: MobileNavItemId) {
+    setDraft(d => {
+      const current = d.mobileNavItems ?? DEFAULT_MOBILE_NAV_ITEMS
+      const selected = current.includes(id)
+      const next = selected
+        ? current.filter(item => item !== id)
+        : current.length >= 4
+          ? current
+          : [...current, id]
+      return { ...d, mobileNavItems: next }
+    })
+  }
+
+  const draftMobileNavItems = draft.mobileNavItems ?? DEFAULT_MOBILE_NAV_ITEMS
 
   return (
     <div className='section-shell px-4 py-6 lg:px-8 lg:py-8'>
@@ -324,6 +366,58 @@ export function SettingsPage() {
                   </SelectContent>
                 </Select>
               </Field>
+
+              <div className='rounded-xl border border-line bg-bg p-4'>
+                <div className='flex items-start justify-between gap-3'>
+                  <div>
+                    <h3 className='text-sm font-semibold text-ink'>
+                      {t("settings.mobileAppbarMenu")}
+                    </h3>
+                    <p className='mt-1 text-xs leading-5 text-muted'>
+                      {t("settings.mobileAppbarMenuDesc")}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      setDraft(d => ({
+                        ...d,
+                        mobileNavItems: DEFAULT_MOBILE_NAV_ITEMS,
+                      }))
+                    }
+                    size='sm'
+                    type='button'
+                    variant='ghost'
+                  >
+                    {t("settings.resetDefault")}
+                  </Button>
+                </div>
+                <div className='mt-3 grid gap-2 sm:grid-cols-2'>
+                  {MOBILE_NAV_ITEM_IDS.map(id => {
+                    const checked = draftMobileNavItems.includes(id)
+                    const disabled = !checked && draftMobileNavItems.length >= 4
+                    return (
+                      <label
+                        key={id}
+                        className='flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink'
+                      >
+                        <input
+                          checked={checked}
+                          className='rounded border-line text-primary disabled:opacity-50'
+                          disabled={disabled}
+                          onChange={() => toggleMobileNavItem(id)}
+                          type='checkbox'
+                        />
+                        <span>{t(MOBILE_NAV_LABEL_KEYS[id])}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+                <p className='mt-2 text-xs text-muted'>
+                  {t("settings.mobileAppbarSelected", {
+                    count: draftMobileNavItems.length,
+                  })}
+                </p>
+              </div>
 
               <label className='flex items-center gap-2 text-sm text-ink'>
                 <input
