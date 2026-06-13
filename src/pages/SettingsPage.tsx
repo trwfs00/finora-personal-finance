@@ -29,6 +29,7 @@ import {
   createTransactionCsv,
   parseBackup,
 } from "../domain/backup"
+import { MRR_RATES } from "../lib/debt-presets"
 import { downloadFile } from "../lib/format"
 import i18n from "../i18n"
 import { useFinanceStore } from "../store/finance-store"
@@ -67,6 +68,7 @@ export function SettingsPage() {
   const accounts = useFinanceStore(state => state.accounts)
   const budgets = useFinanceStore(state => state.budgets)
   const savingsGoals = useFinanceStore(state => state.savingsGoals)
+  const debts = useFinanceStore(state => state.debts)
   const recurringTransactions = useFinanceStore(
     state => state.recurringTransactions,
   )
@@ -110,6 +112,7 @@ export function SettingsPage() {
       budgets,
       recurringTransactions,
       savingsGoals,
+      debts,
       settings,
     })
     downloadFile(
@@ -470,6 +473,8 @@ export function SettingsPage() {
             </div>
           </div>
 
+          <MrrRatesPanel />
+
           <GuideCenter />
         </section>
       </div>
@@ -492,6 +497,72 @@ export function SettingsPage() {
         open={confirmClear}
         title={t("settings.clearTitle")}
       />
+    </div>
+  )
+}
+
+function MrrRatesPanel() {
+  const { t } = useTranslation()
+  const settings = useFinanceStore(state => state.settings)
+  const updateSettings = useFinanceStore(state => state.updateSettings)
+  const [draft, setDraft] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(MRR_RATES).map(([k, v]) => [
+        k,
+        String(settings.mrrRates?.[k] ?? v.mrr),
+      ]),
+    ),
+  )
+
+  const isDirty = Object.entries(MRR_RATES).some(
+    ([k, v]) => Number(draft[k]) !== (settings.mrrRates?.[k] ?? v.mrr),
+  )
+
+  async function save() {
+    const overrides: Record<string, number> = {}
+    for (const [k, v] of Object.entries(draft)) {
+      const n = Number(v)
+      if (!isNaN(n)) overrides[k] = n
+    }
+    await updateSettings({ ...settings, mrrRates: overrides })
+  }
+
+  function reset() {
+    setDraft(
+      Object.fromEntries(Object.entries(MRR_RATES).map(([k, v]) => [k, String(v.mrr)])),
+    )
+  }
+
+  return (
+    <div className='panel p-5'>
+      <h2 className='text-lg font-semibold text-ink'>{t("settings.mrrRates")}</h2>
+      <p className='mt-1 text-sm text-muted'>{t("settings.mrrRatesDesc")}</p>
+      <div className='mt-4 space-y-2'>
+        {Object.entries(MRR_RATES).map(([key]) => (
+          <div key={key} className='flex items-center gap-3'>
+            <span className='flex-1 text-sm text-ink'>{t(`settings.mrrBank.${key}`)}</span>
+            <div className='flex items-center gap-1'>
+              <input
+                className='w-20 rounded-md border border-line bg-surface px-2 py-1 text-right text-sm tabular text-ink focus:outline-none focus:ring-2 focus:ring-primary'
+                inputMode='decimal'
+                step='0.001'
+                type='number'
+                value={draft[key]}
+                onChange={e => setDraft(d => ({ ...d, [key]: e.target.value }))}
+              />
+              <span className='text-sm text-muted'>%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className='mt-4 flex items-center justify-end gap-2 border-t border-line pt-4'>
+        <Button disabled={!isDirty} onClick={reset} type='button' variant='ghost'>
+          {t("settings.mrrRatesReset")}
+        </Button>
+        <Button disabled={!isDirty} onClick={() => void save()} type='button' variant='primary'>
+          {t("settings.apply")}
+        </Button>
+      </div>
     </div>
   )
 }

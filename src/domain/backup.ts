@@ -8,6 +8,7 @@ import type {
   BackupData,
   Budget,
   Category,
+  Debt,
   RecurringTransaction,
   SavingsGoal,
   StoredData,
@@ -21,6 +22,7 @@ export function createBackup(input: {
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   savingsGoals: SavingsGoal[];
+  debts: Debt[];
   settings: AppSettings;
 }): BackupData {
   return {
@@ -33,6 +35,7 @@ export function createBackup(input: {
     budgets: input.budgets,
     recurringTransactions: input.recurringTransactions,
     savingsGoals: input.savingsGoals,
+    debts: input.debts,
     settings: input.settings,
   };
 }
@@ -84,6 +87,7 @@ export function parseBackupData(json: string): BackupData {
     budgets: result.data.budgets,
     recurringTransactions: result.data.recurringTransactions,
     savingsGoals: result.data.savingsGoals ?? [],
+    debts: result.data.debts ?? [],
     settings: result.data.settings,
   };
 }
@@ -98,6 +102,7 @@ export function parseBackup(json: string): StoredData {
     budgets: result.budgets,
     recurringTransactions: result.recurringTransactions,
     savingsGoals: result.savingsGoals ?? [],
+    debts: result.debts ?? [],
     settings: result.settings,
   };
 }

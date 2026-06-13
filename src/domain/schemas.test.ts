@@ -78,6 +78,7 @@ describe("validation schemas", () => {
       budgets: [],
       recurringTransactions: [],
       savingsGoals: [],
+      debts: [],
       settings: DEFAULT_SETTINGS,
     });
 

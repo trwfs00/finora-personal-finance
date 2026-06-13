@@ -1,5 +1,19 @@
 export type TransactionType = "income" | "expense" | "transfer";
 
+export type DebtType =
+  | "credit_card"
+  | "personal_loan"
+  | "cash_advance"
+  | "bnpl"
+  | "car_loan"
+  | "mortgage"
+  | "student_loan"
+  | "informal"
+  | "other";
+
+export type InterestRateType = "fixed" | "floating" | "none";
+export type PaymentStructure = "fixed_installment" | "revolving" | "manual";
+
 export type CategoryType = "income" | "expense";
 
 export type AccountType =
@@ -84,6 +98,29 @@ export interface RecurringTransaction {
   isActive: boolean;
 }
 
+export interface Debt {
+  id: string;
+  name: string;
+  type: DebtType;
+  creditor: string;
+  principal: number;
+  interestRate: number;
+  interestRateType: InterestRateType;
+  paymentStructure: PaymentStructure;
+  minimumPayment: number;
+  extraPayment: number;
+  paymentDueDay?: number;
+  startDate: string;
+  linkedAccountId?: string;
+  rateBenchmark?: string;
+  rateSpread?: number;
+  color?: string;
+  note?: string;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SavingsGoal {
   id: string;
   name: string;
@@ -100,6 +137,7 @@ export interface SavingsGoal {
 }
 
 export type SavingsGoalDraft = Omit<SavingsGoal, "id" | "createdAt" | "updatedAt">;
+export type DebtDraft = Omit<Debt, "id" | "createdAt" | "updatedAt">;
 
 export interface AppSettings {
   username: string;
@@ -111,6 +149,8 @@ export interface AppSettings {
   numberFormat: string;
   backupReminder: boolean;
   backupReminderFrequency: "weekly" | "monthly";
+  mrrRates?: Record<string, number>;
+  accountOrder?: string[];
 }
 
 export type SyncStatus =
@@ -149,6 +189,7 @@ export interface StoredData {
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   savingsGoals: SavingsGoal[];
+  debts: Debt[];
   settings: AppSettings;
 }
 
@@ -164,6 +205,7 @@ export interface FinanceData {
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   savingsGoals: SavingsGoal[];
+  debts: Debt[];
   settings: AppSettings;
   demoLoaded: boolean;
 }

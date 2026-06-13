@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronLeft,
   CircleDollarSign,
+  CreditCard,
   LayoutDashboard,
   Monitor,
   Moon,
@@ -146,6 +147,7 @@ export function AppShell() {
     { href: "/accounts", label: t("nav.accounts"), icon: WalletCards },
     { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
     { href: "/goals", label: t("nav.goals"), icon: Target },
+    { href: "/debts", label: t("nav.debts"), icon: CreditCard },
     { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
   ]
 
@@ -165,6 +167,7 @@ export function AppShell() {
     { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
     { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
     { href: "/goals", label: t("nav.goals"), icon: Target },
+    { href: "/debts", label: t("nav.debts"), icon: CreditCard },
     { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
     { href: "/settings", label: t("nav.settings"), icon: Settings },
   ]

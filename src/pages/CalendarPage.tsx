@@ -115,29 +115,26 @@ export function CalendarPage() {
       </div>
 
       {/* Monthly summary bar */}
-      <div className="mt-6 grid grid-cols-3 rounded-xl border border-line bg-surface">
-        <div className="flex flex-col items-center px-4 py-3">
-          <p className="text-[11px] font-medium text-muted">{t("common.income")}</p>
-          <p className="mt-1 text-sm font-semibold tabular-nums text-primary">
-            {formatCurrency(monthIncome, settings)}
-          </p>
-        </div>
-        <div className="flex flex-col items-center border-x border-line px-4 py-3">
-          <p className="text-[11px] font-medium text-muted">{t("common.expense")}</p>
-          <p className="mt-1 text-sm font-semibold tabular-nums text-danger">
-            {formatCurrency(monthExpense, settings)}
-          </p>
-        </div>
-        <div className="flex flex-col items-center px-4 py-3">
-          <p className="text-[11px] font-medium text-muted">{t("common.net")}</p>
-          <p
-            className={cn(
-              "mt-1 text-sm font-semibold tabular-nums",
-              net >= 0 ? "text-primary" : "text-danger",
-            )}
-          >
-            {formatCurrency(net, settings)}
-          </p>
+      <div className="panel mt-6 overflow-hidden">
+        <div className="grid grid-cols-3 divide-x divide-line">
+          <div className="px-5 py-5">
+            <p className="text-sm text-muted">{t("common.income")}</p>
+            <p className="mt-2 text-2xl font-semibold tabular text-primary">
+              {formatCurrency(monthIncome, settings)}
+            </p>
+          </div>
+          <div className="px-5 py-5">
+            <p className="text-sm text-muted">{t("common.expense")}</p>
+            <p className="mt-2 text-2xl font-semibold tabular text-danger">
+              {formatCurrency(monthExpense, settings)}
+            </p>
+          </div>
+          <div className="px-5 py-5">
+            <p className="text-sm text-muted">{t("common.net")}</p>
+            <p className={cn("mt-2 text-2xl font-semibold tabular", net >= 0 ? "text-primary" : "text-danger")}>
+              {formatCurrency(net, settings)}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -287,7 +284,7 @@ function SpendingCalendar({
         {weekdays.map((d, i) => (
           <div
             key={i}
-            className="py-2 text-center text-[11px] font-medium text-muted"
+            className="py-2 text-center text-xs font-medium text-muted"
           >
             {d}
           </div>
@@ -306,7 +303,7 @@ function SpendingCalendar({
               type="button"
               onClick={() => onSelectDate(isSelected ? null : day.dateStr)}
               className={cn(
-                "relative flex min-h-[56px] flex-col gap-0.5 p-1.5 text-left transition-colors hover:bg-ink/5",
+                "relative flex min-h-[64px] flex-col gap-0.5 p-2 text-left transition-colors hover:bg-ink/5",
                 !day.isCurrentMonth && "opacity-35",
                 isSelected && "bg-primary/8 ring-1 ring-inset ring-primary",
                 !isSelected && intensity > 0 && INTENSITY_BG[intensity],
@@ -314,7 +311,7 @@ function SpendingCalendar({
             >
               <span
                 className={cn(
-                  "inline-flex h-6 w-6 items-center justify-center rounded-full text-[13px] font-medium leading-none",
+                  "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium leading-none",
                   day.isToday && "bg-primary text-white",
                   !day.isToday && "text-ink",
                 )}
@@ -322,7 +319,7 @@ function SpendingCalendar({
                 {day.date.getDate()}
               </span>
               {day.expense > 0 && day.isCurrentMonth && (
-                <span className="truncate text-[10px] leading-none text-danger/80">
+                <span className="truncate text-xs leading-none text-danger/80">
                   {compactAmount(day.expense, settings)}
                 </span>
               )}
@@ -333,7 +330,7 @@ function SpendingCalendar({
 
       {/* Heatmap legend */}
       <div className="flex items-center justify-end gap-1.5 border-t border-line px-3 py-2">
-        <span className="text-[10px] text-muted">{t("calendar.less")}</span>
+        <span className="text-xs text-muted">{t("calendar.less")}</span>
         {([0, 1, 2, 3, 4] as const).map((i) => (
           <div
             key={i}
@@ -343,7 +340,7 @@ function SpendingCalendar({
             )}
           />
         ))}
-        <span className="text-[10px] text-muted">{t("calendar.more")}</span>
+        <span className="text-xs text-muted">{t("calendar.more")}</span>
       </div>
     </div>
   );
@@ -385,11 +382,11 @@ function DayDetail({
     <div className="rounded-xl border border-line bg-surface">
       {/* Date header */}
       <div className="border-b border-line px-4 py-3">
-        <h3 className="text-sm font-semibold text-ink">
+        <h3 className="text-base font-semibold text-ink">
           {format(parsedDate, "EEEE, d MMMM yyyy", { locale })}
         </h3>
         {(totalIncome > 0 || totalExpense > 0) && (
-          <div className="mt-1.5 flex gap-3 text-xs">
+          <div className="mt-1.5 flex gap-3 text-sm">
             {totalIncome > 0 && (
               <span className="font-medium tabular-nums text-primary">
                 +{formatCurrency(totalIncome, settings)}
@@ -416,30 +413,30 @@ function DayDetail({
             return (
               <div
                 key={tx.id}
-                className="flex items-center justify-between gap-3 px-4 py-2.5"
+                className="flex items-center justify-between gap-3 px-4 py-3"
               >
                 <div className="flex min-w-0 items-center gap-2.5">
                   <div
-                    className="h-5 w-5 shrink-0 rounded-full"
+                    className="h-6 w-6 shrink-0 rounded-full"
                     style={{
                       background: cat?.color ?? "oklch(var(--surface-2))",
                     }}
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-ink">
+                    <p className="truncate text-sm font-medium text-ink">
                       {tx.note || cat?.name || t(`common.${tx.type}`)}
                     </p>
                     {cat && tx.note && (
-                      <p className="truncate text-[11px] text-muted">{cat.name}</p>
+                      <p className="truncate text-xs text-muted">{cat.name}</p>
                     )}
                     {tx.time && (
-                      <p className="text-[11px] text-muted">{tx.time.slice(0, 5)}</p>
+                      <p className="text-xs text-muted">{tx.time.slice(0, 5)}</p>
                     )}
                   </div>
                 </div>
                 <span
                   className={cn(
-                    "shrink-0 text-xs font-medium tabular-nums",
+                    "shrink-0 text-sm font-medium tabular-nums",
                     tx.type === "income"
                       ? "text-primary"
                       : tx.type === "expense"

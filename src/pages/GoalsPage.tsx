@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { HelpButton } from "../components/help/HelpButton";
+import { Tooltip } from "../components/ui/tooltip";
 import { GoalForm } from "../components/GoalForm";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -208,32 +209,38 @@ export function GoalsPage() {
                         {t("goals.addContribution")}
                       </Button>
                     )}
-                    <Button
-                      aria-label={t("common.edit")}
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => { setEditing(goal); setDialogOpen(true); }}
-                    >
-                      <Pencil aria-hidden className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      aria-label={goal.isArchived ? t("goals.unarchiveGoal") : t("goals.archiveGoal")}
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => void toggleArchive(goal)}
-                    >
-                      {goal.isArchived
-                        ? <ArchiveX aria-hidden className="h-4 w-4" />
-                        : <Archive aria-hidden className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      aria-label={t("common.delete")}
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setPendingDelete(goal)}
-                    >
-                      <Trash2 aria-hidden className="h-4 w-4" />
-                    </Button>
+                    <Tooltip label={t("common.edit")}>
+                      <Button
+                        aria-label={t("common.edit")}
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => { setEditing(goal); setDialogOpen(true); }}
+                      >
+                        <Pencil aria-hidden className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip label={goal.isArchived ? t("goals.unarchiveGoal") : t("goals.archiveGoal")}>
+                      <Button
+                        aria-label={goal.isArchived ? t("goals.unarchiveGoal") : t("goals.archiveGoal")}
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => void toggleArchive(goal)}
+                      >
+                        {goal.isArchived
+                          ? <ArchiveX aria-hidden className="h-4 w-4" />
+                          : <Archive aria-hidden className="h-4 w-4" />}
+                      </Button>
+                    </Tooltip>
+                    <Tooltip label={t("common.delete")}>
+                      <Button
+                        aria-label={t("common.delete")}
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setPendingDelete(goal)}
+                      >
+                        <Trash2 aria-hidden className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
                   </div>
                 </div>
               );

@@ -11,6 +11,8 @@ import type {
   BudgetDraft,
   Category,
   CategoryDraft,
+  Debt,
+  DebtDraft,
   FinanceData,
   RecurringTransaction,
   SavingsGoal,
@@ -47,6 +49,9 @@ interface FinanceState extends FinanceData {
   updateGoal: (id: string, draft: SavingsGoalDraft) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
   addContribution: (id: string, amount: number) => Promise<void>;
+  addDebt: (draft: DebtDraft) => Promise<void>;
+  updateDebt: (id: string, draft: DebtDraft) => Promise<void>;
+  deleteDebt: (id: string) => Promise<void>;
   updateSettings: (settings: AppSettings) => Promise<void>;
   restoreData: (data: StoredData) => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -61,6 +66,7 @@ const emptyData: FinanceData = {
   budgets: [],
   recurringTransactions: [],
   savingsGoals: [],
+  debts: [],
   settings: {
     username: "",
     currency: "THB",
@@ -163,6 +169,15 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   addContribution: async (id, amount) => {
     await mutate(set, () => repository.addContribution(id, amount));
   },
+  addDebt: async (draft) => {
+    await mutate(set, () => repository.addDebt(draft));
+  },
+  updateDebt: async (id, draft) => {
+    await mutate(set, () => repository.updateDebt(id, draft));
+  },
+  deleteDebt: async (id) => {
+    await mutate(set, () => repository.deleteDebt(id));
+  },
   generateDueRecurring: async () => {
     try {
       const { recurringTransactions } = get();
@@ -246,3 +261,4 @@ export type StoreAccount = Account;
 export type StoreBudget = Budget;
 export type StoreRecurringTransaction = RecurringTransaction;
 export type StoreSavingsGoal = SavingsGoal;
+export type StoreDebt = Debt;
