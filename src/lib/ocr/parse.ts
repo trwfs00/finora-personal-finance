@@ -1,157 +1,85 @@
+import { scoreConfidence, type SlipConfidence } from "./confidence";
+import { detectBank } from "./detect-bank";
+import { normalizeOcrText } from "./normalize";
+import { getParser } from "./parsers";
+import type { BankId } from "./parsers/types";
+
 export interface SlipData {
   amount?: number;
   date?: string;
   time?: string;
   bankName?: string;
+  bankId?: BankId;
   accountSuffix?: string;
   accountSuffixes?: string[];
   recipientName?: string;
   refNumber?: string;
+  confidence?: SlipConfidence;
 }
 
-// ─── Amount ───────────────────────────────────────────────────────────────────
-const CURRENCY_RE = /(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d+\.\d{1,2})/g;
+// Extracts text from HOCR restricted to x < xThreshold (fraction of image
+// width). Used to build a QR-noise-free search space for amount extraction on
+// slips where the QR code column sits to the right of the slip content.
+function extractLeftColumnText(hocr: string, xThreshold = 0.60): string {
+  const pageM = hocr.match(/class='ocr_page'[^>]*bbox\s+\d+\s+\d+\s+(\d+)\s+(\d+)/);
+  const imgW = pageM ? parseInt(pageM[1]) : 1;
+  const imgH = pageM ? parseInt(pageM[2]) : 1;
+  const lineTol = imgH * 0.015;
 
-// "จำนวนเงินที่ชำระ" = actual amount paid (after discount) — highest priority
-const AMOUNT_ANCHOR_RE =
-  /(?:จำนวนเงินที่ชำระ|จำนวนเงิน|จำนวน)[:\s]*\n?\s*([0-9,]+\.?\d*)/;
+  const words: Array<{ xCtr: number; yCtr: number; text: string }> = [];
+  const re =
+    /<span class='ocrx_word'[^>]*title='bbox\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)[^']*'[^>]*>([^<]*)<\/span>/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(hocr)) !== null) {
+    const xCtr = (parseInt(m[1]) + parseInt(m[3])) / 2;
+    if (xCtr / imgW >= xThreshold) continue;
+    const text = m[5]
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim();
+    if (text) words.push({ xCtr, yCtr: (parseInt(m[2]) + parseInt(m[4])) / 2, text });
+  }
 
-// ─── Date ─────────────────────────────────────────────────────────────────────
-const THAI_MONTHS: Record<string, number> = {
-  "ม.ค.": 1,  "ก.พ.": 2,  "มี.ค.": 3, "เม.ย.": 4,
-  "พ.ค.": 5,  "มิ.ย.": 6, "ก.ค.": 7,  "ส.ค.": 8,
-  "ก.ย.": 9,  "ต.ค.": 10, "พ.ย.": 11, "ธ.ค.": 12,
-};
-const THAI_MONTH_PATTERN = Object.keys(THAI_MONTHS)
-  .join("|")
-  .replace(/\./g, "\\.");
-const THAI_DATE_RE = new RegExp(
-  `(\\d{1,2})\\s+(${THAI_MONTH_PATTERN})\\s+(\\d{2,4})`,
-);
-const NUMERIC_DATE_RE = /(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})/;
+  words.sort((a, b) => a.yCtr - b.yCtr || a.xCtr - b.xCtr);
 
-// ─── Time ─────────────────────────────────────────────────────────────────────
-const TIME_RE = /(\d{2}):(\d{2})(?::\d{2})?/;
+  const lines: string[][] = [];
+  let curY = -9999;
+  for (const { yCtr, text } of words) {
+    if (yCtr - curY > lineTol) {
+      lines.push([]);
+      curY = yCtr;
+    }
+    lines[lines.length - 1].push(text);
+  }
 
-// ─── Bank ─────────────────────────────────────────────────────────────────────
-const BANK_RE =
-  /กสิกร(?:ไทย)?|กรุงไทย|ไทยพาณิชย์|กรุงศรี|ทหารไทย|ออมสิน|กรุงเทพ|KBANK|KTB|SCB|BAY|TTB|GSB|make\s+by\s+KBank/i;
-
-// ─── Account suffix ───────────────────────────────────────────────────────────
-// Matches: xxx-x-x3526-x  |  XXX-X-XX307-0  |  0203xxxx1174  |  x-xxxx-xxxx0-55-4  |  x-xxxx-xxxx9-74-7  |  x-5283  |  **** ******* 0003
-const ACCT_RE = /(?:(?:[xX*]{2,}|[xX*](?=-))[\d\-xX*]*\d[\d\-xX*]*|\d+[xX*]{3,}\d+|[xX*]{2,}(?:\s+[xX*]+)+\s*\d+)/;
-
-// ─── Reference number ─────────────────────────────────────────────────────────
-const REF_RE =
-  /(?:เลขที่รายการ|เลขที่อ้างอิง|หลักอ้างอิง|รหัสอ้างอิง|หมายเลขอ้างอิง|เลขอ้างอิง|Ref\.?No\.?)[:\s]+([^\n\r]+)/i;
-
-// ─── Recipient ────────────────────────────────────────────────────────────────
-// Keyword-based: mymo "ถึง", Krungthai "ไปยัง", Bangkok Bank "ไปที่", others
-const RECIPIENT_KEYWORD_RE =
-  /(?:ผู้รับ|ปลายทาง|ถึง|ไปยัง|ไปที่|to|ชื่อ|name)[:\s]+([^\n\r]+)/i;
-
-// Thai char range for name detection
-const THAI_CHAR_RE = /[฀-๿]/;
-// Pure reference code: all caps+digits, no spaces, ≥10 chars
-const REF_CODE_RE = /^[0-9A-Z]{10,}$/;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function beToYear(y: number): number {
-  if (y > 2400) return y - 543;        // full BE year, e.g. 2569 → 2026
-  if (y < 100) return (2500 + y) - 543; // 2-digit short BE, e.g. 69 → 2026
-  return y;
+  return lines.map((l) => l.join(" ")).join("\n");
 }
 
-// Fallback recipient: the line immediately after the first account suffix
-// that looks like a person/merchant name (not a reference code or bare number)
-function extractRecipientAfterAccount(text: string): string | undefined {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  for (let i = 0; i < lines.length - 1; i++) {
-    if (ACCT_RE.test(lines[i])) {
-      const next = lines[i + 1];
-      const hasThaiOrWords =
-        THAI_CHAR_RE.test(next) ||
-        /^[A-Z][A-Z0-9\s.,()&'-]{3,}$/.test(next);
-      const isRefCode = REF_CODE_RE.test(next);
-      const isBarNumber = /^\d+$/.test(next);
-      if (hasThaiOrWords && !isRefCode && !isBarNumber) {
-        return next;
-      }
-    }
-  }
-  return undefined;
-}
+// Pipeline: normalize OCR text → detect bank → bank parser → confidence.
+// hocr (optional): full HOCR string from Tesseract, used to extract a
+// left-column-only view for banks where QR noise occupies the right half.
+export function parseSlipText(rawText: string, hocr?: string): SlipData {
+  const text = normalizeOcrText(rawText);
+  const bankId = detectBank(text);
 
-// ─── Main parser ──────────────────────────────────────────────────────────────
-export function parseSlipText(text: string): SlipData {
-  const result: SlipData = {};
+  const leftColText =
+    hocr && (bankId === "make" || bankId === "kbank")
+      ? normalizeOcrText(extractLeftColumnText(hocr))
+      : undefined;
 
-  // Amount — keyword anchor first ("จำนวนเงินที่ชำระ" = paid after discount)
-  const anchorMatch = AMOUNT_ANCHOR_RE.exec(text);
-  if (anchorMatch) {
-    const val = parseFloat(anchorMatch[1].replace(/,/g, ""));
-    if (!isNaN(val) && val > 0) result.amount = val;
-  }
-  if (result.amount === undefined) {
-    const amounts: number[] = [];
-    const re = new RegExp(CURRENCY_RE.source, "g");
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text)) !== null) {
-      const val = parseFloat(m[1].replace(/,/g, ""));
-      if (!isNaN(val) && val > 0) amounts.push(val);
-    }
-    if (amounts.length > 0) result.amount = Math.max(...amounts);
-  }
+  const parsed = getParser(bankId)(text, leftColText);
 
-  // Date — Thai month name first (covers all real slips), numeric fallback
-  const thaiMatch = THAI_DATE_RE.exec(text);
-  if (thaiMatch) {
-    const [, d, monthAbbr, y] = thaiMatch;
-    const month = THAI_MONTHS[monthAbbr];
-    const year = beToYear(parseInt(y, 10));
-    if (month) {
-      result.date = `${year}-${String(month).padStart(2, "0")}-${String(parseInt(d, 10)).padStart(2, "0")}`;
-    }
-  } else {
-    const numericMatch = NUMERIC_DATE_RE.exec(text);
-    if (numericMatch) {
-      const [, d, mo, y] = numericMatch;
-      const year = beToYear(parseInt(y, 10));
-      result.date = `${year}-${String(parseInt(mo, 10)).padStart(2, "0")}-${String(parseInt(d, 10)).padStart(2, "0")}`;
-    }
-  }
-
-  // Time
-  const timeMatch = TIME_RE.exec(text);
-  if (timeMatch) result.time = `${timeMatch[1]}:${timeMatch[2]}`;
-
-  // Bank
-  const bankMatch = BANK_RE.exec(text);
-  if (bankMatch) result.bankName = bankMatch[0];
-
-  // Account suffixes — collect all matches (first = sender, second = receiver)
-  const acctGlobal = new RegExp(ACCT_RE.source, "g");
-  const acctMatches: string[] = [];
-  let acctM: RegExpExecArray | null;
-  while ((acctM = acctGlobal.exec(text)) !== null) {
-    acctMatches.push(acctM[0]);
-  }
-  if (acctMatches.length > 0) {
-    result.accountSuffix = acctMatches[0];
-    result.accountSuffixes = acctMatches;
-  }
-
-  // Recipient — keyword first, then post-account-suffix line
-  const keywordMatch = RECIPIENT_KEYWORD_RE.exec(text);
-  if (keywordMatch) {
-    result.recipientName = keywordMatch[1].trim();
-  } else {
-    result.recipientName = extractRecipientAfterAccount(text);
-  }
-
-  // Reference number
-  const refMatch = REF_RE.exec(text);
-  if (refMatch) result.refNumber = refMatch[1].trim();
-
-  return result;
+  return {
+    amount: parsed.amount.value,
+    date: parsed.date.value,
+    time: parsed.time.value,
+    bankName: parsed.bankName,
+    bankId,
+    accountSuffix: parsed.accounts.value?.[0],
+    accountSuffixes: parsed.accounts.value,
+    recipientName: parsed.recipientName,
+    refNumber: parsed.ref.value,
+    confidence: scoreConfidence(parsed),
+  };
 }

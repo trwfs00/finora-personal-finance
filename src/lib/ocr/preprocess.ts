@@ -1,5 +1,16 @@
 import imageCompression from "browser-image-compression";
 
+// Pure pixel transform — no browser dependency, importable in Node.js tests.
+// Boosts contrast per channel independently so white-on-color text (e.g. mymo
+// GSB amount on a green header) survives Tesseract's internal grayscale step.
+export function applyContrastToPixels(data: Uint8ClampedArray): void {
+  for (let i = 0; i < data.length; i += 4) {
+    data[i]   = Math.max(0, Math.min(255, (data[i]   - 128) * 1.5 + 128));
+    data[i+1] = Math.max(0, Math.min(255, (data[i+1] - 128) * 1.5 + 128));
+    data[i+2] = Math.max(0, Math.min(255, (data[i+2] - 128) * 1.5 + 128));
+  }
+}
+
 export async function preprocessSlip(file: File): Promise<Blob> {
   const compressed = await imageCompression(file, {
     maxSizeMB: 1,
@@ -20,14 +31,7 @@ async function applyCanvasFilter(blob: Blob): Promise<Blob> {
   ctx.drawImage(bitmap, 0, 0);
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const { data } = imageData;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    const contrasted = Math.max(0, Math.min(255, (gray - 128) * 1.5 + 128));
-    data[i] = data[i + 1] = data[i + 2] = contrasted;
-  }
-
+  applyContrastToPixels(imageData.data);
   ctx.putImageData(imageData, 0, 0);
 
   return new Promise<Blob>((resolve, reject) => {

@@ -15,6 +15,7 @@
     "income": "Income",
     "expense": "Expense",
     "transfer": "Transfer",
+    "transferOrTopup": "Transfer / Top-up",
     "save": "Save",
     "cancel": "Cancel",
     "add": "Add",
@@ -319,10 +320,13 @@
     "receiptRefHint": "Receipt storage is planned for a later version.",
     "receiptRefPlaceholder": "Reference text",
     "saveTx": "Save transaction",
-    "addTx": "Add transaction"
+    "addTx": "Add transaction",
+    "duplicateWarning": "This looks like a transaction already recorded on {{date}} {{time}}. Save again to add it anyway.",
+    "saveAnyway": "Save anyway"
   },
   "slip": {
     "title": "Scan slip",
+    "uploadSlip": "Upload slip",
     "scanButton": "Scan from slip",
     "uploadPrompt": "Choose a slip image",
     "uploadHint": "JPEG, PNG, WEBP — processed locally on this device",
@@ -330,6 +334,7 @@
     "loadingModel": "Loading OCR model…",
     "recognizing": "Reading text…",
     "preview": "Slip preview",
+    "viewFull": "View full image",
     "amount": "Amount",
     "date": "Date",
     "time": "Time",
@@ -342,7 +347,10 @@
     "apply": "Fill form",
     "rescan": "Scan again",
     "retry": "Try again",
-    "error": "Could not read the slip"
+    "error": "Could not read the slip",
+    "errorFileType": "Unsupported file — choose a JPEG, PNG, or WEBP image",
+    "errorFileSize": "Image is too large (max 10 MB)",
+    "errorResolution": "Image is too small to read (min 300×300 px)"
   },
   "budgetForm": {
     "month": "Month",

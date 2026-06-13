@@ -1,4 +1,5 @@
 import {
+  ArrowRightLeft,
   BarChart3,
   CalendarDays,
   ChevronLeft,
@@ -10,98 +11,132 @@ import {
   Plus,
   ReceiptText,
   Repeat,
+  ScanLine,
   Search,
   Settings,
   Sun,
   Target,
+  TrendingDown,
+  TrendingUp,
   WalletCards,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+  X,
+} from "lucide-react"
+import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { NavLink, Outlet, useLocation } from "react-router-dom"
 
-import logoUrl from "../assets/logo.svg";
-import { useShortcutKey } from "../hooks/useShortcutKey";
-import i18n from "../i18n";
-import { cn } from "../lib/utils";
-import { useFinanceStore } from "../store/finance-store";
-import { GoogleDriveSyncShortcut } from "./GoogleDriveSyncShortcut";
-import { OnboardingModal } from "./OnboardingModal";
-import { SpotlightSearch } from "./SpotlightSearch";
-import { TransactionForm } from "./TransactionForm";
-import { Button } from "./ui/button";
-import { Dialog } from "./ui/dialog";
+import logoUrl from "../assets/logo.svg"
+import { useShortcutKey } from "../hooks/useShortcutKey"
+import i18n from "../i18n"
+import { cn } from "../lib/utils"
+import { useFinanceStore } from "../store/finance-store"
+import { GoogleDriveSyncShortcut } from "./GoogleDriveSyncShortcut"
+import { OnboardingModal } from "./OnboardingModal"
+import { SpotlightSearch } from "./SpotlightSearch"
+import { TransactionForm } from "./TransactionForm"
+import { Dialog } from "./ui/dialog"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "./ui/select"
 
-const THEME_CYCLE = ["system", "light", "dark"] as const;
-type AppTheme = (typeof THEME_CYCLE)[number];
+const THEME_CYCLE = ["system", "light", "dark"] as const
+type AppTheme = (typeof THEME_CYCLE)[number]
 
 const LANG_TO_LOCALE: Record<string, string> = {
   en: "en-US",
   th: "th-TH",
-};
+}
 
-const QUICK_CURRENCIES = ["THB", "USD", "EUR", "GBP", "JPY", "SGD", "CNY", "KRW"] as const;
+const QUICK_CURRENCIES = [
+  "THB",
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "SGD",
+  "CNY",
+  "KRW",
+] as const
+
+type QuickAddType = "income" | "expense" | "transfer"
+type QuickAddAction =
+  | { kind: "transaction"; type: QuickAddType; label: string; icon: typeof Plus }
+  | { kind: "slip"; label: string; icon: typeof Plus }
 
 export function AppShell() {
-  const { t } = useTranslation();
-  const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [spotlightOpen, setSpotlightOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const location = useLocation();
+  const { t } = useTranslation()
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickAddMenuOpen, setQuickAddMenuOpen] = useState(false)
+  const [quickAddType, setQuickAddType] = useState<QuickAddType>("expense")
+  const [quickAddScannerOpen, setQuickAddScannerOpen] = useState(false)
+  const [spotlightOpen, setSpotlightOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const location = useLocation()
   const [onboardingOpen, setOnboardingOpen] = useState(() => {
     try {
-      return !localStorage.getItem("finora-onboarded");
+      return !localStorage.getItem("finora-onboarded")
     } catch {
-      return false;
+      return false
     }
-  });
+  })
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem("sidebar-collapsed") === "true";
+      return localStorage.getItem("sidebar-collapsed") === "true"
     } catch {
-      return false;
+      return false
     }
-  });
+  })
 
-  const initialize = useFinanceStore((state) => state.initialize);
-  const initialized = useFinanceStore((state) => state.initialized);
-  const error = useFinanceStore((state) => state.error);
-  const settings = useFinanceStore((state) => state.settings);
-  const updateSettings = useFinanceStore((state) => state.updateSettings);
+  const initialize = useFinanceStore(state => state.initialize)
+  const initialized = useFinanceStore(state => state.initialized)
+  const error = useFinanceStore(state => state.error)
+  const settings = useFinanceStore(state => state.settings)
+  const updateSettings = useFinanceStore(state => state.updateSettings)
 
   function toggleCollapsed() {
-    setIsCollapsed((prev) => {
-      const next = !prev;
+    setIsCollapsed(prev => {
+      const next = !prev
       try {
-        localStorage.setItem("sidebar-collapsed", String(next));
+        localStorage.setItem("sidebar-collapsed", String(next))
       } catch {
         // ignore
       }
-      return next;
-    });
+      return next
+    })
   }
 
   function cycleTheme() {
-    const idx = THEME_CYCLE.indexOf(settings.theme as AppTheme);
-    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
-    void updateSettings({ ...settings, theme: next });
+    const idx = THEME_CYCLE.indexOf(settings.theme as AppTheme)
+    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length]
+    void updateSettings({ ...settings, theme: next })
+  }
+
+  function openQuickAdd(
+    type: QuickAddType = "expense",
+    options: { scannerOpen?: boolean } = {},
+  ) {
+    setQuickAddType(type)
+    setQuickAddScannerOpen(options.scannerOpen ?? false)
+    setQuickAddMenuOpen(false)
+    setQuickAddOpen(true)
+  }
+
+  function openSlipUpload() {
+    openQuickAdd("expense", { scannerOpen: true })
   }
 
   useEffect(() => {
-    void initialize();
-  }, [initialize]);
+    void initialize()
+  }, [initialize])
 
-  useShortcutKey({ key: "k", mod: true }, () => setSpotlightOpen(true));
-  useShortcutKey({ key: "n" }, () => setQuickAddOpen(true));
-  useShortcutKey({ key: "b", mod: true }, toggleCollapsed);
-  useShortcutKey({ key: "j", mod: true }, cycleTheme);
+  useShortcutKey({ key: "k", mod: true }, () => setSpotlightOpen(true))
+  useShortcutKey({ key: "n" }, () => openQuickAdd())
+  useShortcutKey({ key: "b", mod: true }, toggleCollapsed)
+  useShortcutKey({ key: "j", mod: true }, cycleTheme)
 
   const mainNavItems = [
     { href: "/", label: t("nav.overview"), icon: LayoutDashboard },
@@ -112,11 +147,11 @@ export function AppShell() {
     { href: "/recurring", label: t("nav.recurring"), icon: Repeat },
     { href: "/goals", label: t("nav.goals"), icon: Target },
     { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
-  ];
+  ]
 
   const bottomNavItems = [
     { href: "/settings", label: t("nav.settings"), icon: Settings },
-  ];
+  ]
 
   // Mobile nav: 4 primary tabs + "More" drawer for the rest
   const primaryNavItems = [
@@ -124,7 +159,7 @@ export function AppShell() {
     { href: "/transactions", label: t("nav.transactions"), icon: ReceiptText },
     { href: "/accounts", label: t("nav.accounts"), icon: WalletCards },
     { href: "/budgets", label: t("nav.budgets"), icon: CircleDollarSign },
-  ];
+  ]
 
   const secondaryNavItems = [
     { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
@@ -132,28 +167,43 @@ export function AppShell() {
     { href: "/goals", label: t("nav.goals"), icon: Target },
     { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
     { href: "/settings", label: t("nav.settings"), icon: Settings },
-  ];
+  ]
 
   const isSecondaryActive = secondaryNavItems.some(
-    ({ href }) => href === location.pathname || location.pathname.startsWith(href + "/"),
-  );
+    ({ href }) =>
+      href === location.pathname || location.pathname.startsWith(href + "/"),
+  )
 
-  useEffect(() => { setMoreOpen(false); }, [location.pathname]);
+  const quickAddActions = [
+    { kind: "transaction", type: "income", label: t("common.income"), icon: TrendingUp },
+    { kind: "transaction", type: "expense", label: t("common.expense"), icon: TrendingDown },
+    {
+      kind: "transaction",
+      type: "transfer",
+      label: t("common.transferOrTopup"),
+      icon: ArrowRightLeft,
+    },
+    { kind: "slip", label: t("slip.uploadSlip"), icon: ScanLine },
+  ] satisfies QuickAddAction[]
+
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [location.pathname])
 
   if (!initialized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg p-6">
-        <div className="panel w-full max-w-sm p-6">
-          <div className="h-3 w-16 rounded-full bg-surface-2" />
-          <div className="mt-6 h-8 rounded-lg bg-surface-2" />
-          <div className="mt-3 h-3 w-3/4 rounded-full bg-surface-2" />
+      <div className='flex min-h-screen items-center justify-center bg-bg p-6'>
+        <div className='panel w-full max-w-sm p-6'>
+          <div className='h-3 w-16 rounded-full bg-surface-2' />
+          <div className='mt-6 h-8 rounded-lg bg-surface-2' />
+          <div className='mt-3 h-3 w-3/4 rounded-full bg-surface-2' />
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-bg text-ink">
+    <div className='min-h-screen bg-bg text-ink'>
       {/* Desktop sidebar */}
       <aside
         className={cn(
@@ -163,10 +213,12 @@ export function AppShell() {
       >
         {/* Collapse toggle */}
         <button
-          aria-label={isCollapsed ? t("shell.expandSidebar") : t("shell.collapseSidebar")}
-          className="absolute -right-3 top-[3.75rem] z-20 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface shadow-sm text-muted transition-colors hover:text-ink"
+          aria-label={
+            isCollapsed ? t("shell.expandSidebar") : t("shell.collapseSidebar")
+          }
+          className='absolute -right-3 top-[3.75rem] z-20 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface shadow-sm text-muted transition-colors hover:text-ink'
           onClick={toggleCollapsed}
-          type="button"
+          type='button'
         >
           <ChevronLeft
             aria-hidden
@@ -184,48 +236,59 @@ export function AppShell() {
             isCollapsed ? "justify-center" : "gap-2.5",
           )}
           title={isCollapsed ? "Finora" : undefined}
-          to="/"
+          to='/'
         >
-          <img alt="" aria-hidden className="h-8 w-8 shrink-0 rounded-lg" src={logoUrl} />
+          <img
+            alt=''
+            aria-hidden
+            className='h-8 w-8 shrink-0 rounded-lg'
+            src={logoUrl}
+          />
           {!isCollapsed && (
-            <span className="text-sm font-semibold text-ink">Finora</span>
+            <span className='text-sm font-semibold text-ink'>Finora</span>
           )}
         </NavLink>
 
         {/* Main nav */}
-        <nav aria-label={t("nav.menu")} className="flex-1 space-y-0.5">
+        <nav aria-label={t("nav.menu")} className='flex-1 space-y-0.5'>
           {!isCollapsed && (
-            <p className="mb-1 px-3 text-[11px] font-medium text-muted">{t("nav.menu")}</p>
+            <p className='mb-1 px-3 text-[11px] font-medium text-muted'>
+              {t("nav.menu")}
+            </p>
           )}
-          {mainNavItems.map((item) => (
+          {mainNavItems.map(item => (
             <NavItem key={item.href} isCollapsed={isCollapsed} {...item} />
           ))}
         </nav>
 
         {/* Bottom nav + footer */}
         <div className={cn(isCollapsed ? "space-y-1" : "space-y-3")}>
-          <div className="space-y-0.5 border-t border-line pt-3">
+          <div className='space-y-0.5 border-t border-line pt-3'>
             {!isCollapsed && (
-              <p className="mb-1 px-3 text-[11px] font-medium text-muted">
+              <p className='mb-1 px-3 text-[11px] font-medium text-muted'>
                 {t("nav.settings")}
               </p>
             )}
-            {bottomNavItems.map((item) => (
+            {bottomNavItems.map(item => (
               <NavItem key={item.href} isCollapsed={isCollapsed} {...item} />
             ))}
           </div>
 
           {!isCollapsed && (
-            <div className="space-y-2 px-1">
-              <div className="flex items-center gap-2 px-2 py-1">
-                <kbd className="inline-flex h-5 items-center rounded border border-line bg-bg px-1.5 font-mono text-[10px] text-muted">
+            <div className='space-y-2 px-1'>
+              <div className='flex items-center gap-2 px-2 py-1'>
+                <kbd className='inline-flex h-5 items-center rounded border border-line bg-bg px-1.5 font-mono text-[10px] text-muted'>
                   N
                 </kbd>
-                <span className="text-xs text-muted">{t("shell.quickAdd")}</span>
+                <span className='text-xs text-muted'>
+                  {t("shell.quickAdd")}
+                </span>
               </div>
-              <div className="rounded-xl border border-line bg-bg px-3 py-2.5">
-                <p className="text-xs font-medium text-ink">{t("shell.localWorkspace")}</p>
-                <p className="mt-0.5 text-xs leading-4 text-muted">
+              <div className='rounded-xl border border-line bg-bg px-3 py-2.5'>
+                <p className='text-xs font-medium text-ink'>
+                  {t("shell.localWorkspace")}
+                </p>
+                <p className='mt-0.5 text-xs leading-4 text-muted'>
                   {t("shell.noCloudSync")}
                 </p>
               </div>
@@ -235,30 +298,31 @@ export function AppShell() {
       </aside>
 
       {/* Mobile header */}
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
-        <div className="flex items-center justify-between gap-2">
+      <header className='sticky top-0 z-30 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden'>
+        <div className='flex items-center justify-between gap-2'>
           <NavLink
-            className="flex shrink-0 items-center gap-2 text-sm font-semibold text-ink"
-            to="/"
+            className='flex shrink-0 items-center gap-2 text-sm font-semibold text-ink'
+            to='/'
           >
-            <img alt="" aria-hidden className="h-7 w-7 rounded-md" src={logoUrl} />
+            <img
+              alt=''
+              aria-hidden
+              className='h-7 w-7 rounded-md'
+              src={logoUrl}
+            />
             Finora
           </NavLink>
-          <div className="flex items-center gap-1">
+          <div className='flex items-center gap-1'>
             <GoogleDriveSyncShortcut compact />
             <QuickSettings />
             <button
               aria-label={t("common.search")}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:text-ink"
+              className='flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:text-ink'
               onClick={() => setSpotlightOpen(true)}
-              type="button"
+              type='button'
             >
-              <Search aria-hidden className="h-4 w-4" />
+              <Search aria-hidden className='h-4 w-4' />
             </button>
-            <Button onClick={() => setQuickAddOpen(true)} size="sm" variant="primary">
-              <Plus aria-hidden className="h-4 w-4" />
-              {t("common.add")}
-            </Button>
           </div>
         </div>
       </header>
@@ -271,20 +335,20 @@ export function AppShell() {
         )}
       >
         {/* Desktop top bar */}
-        <div className="sticky top-0 z-20 hidden h-14 items-center justify-between gap-2 border-b border-line bg-surface px-6 lg:flex">
+        <div className='sticky top-0 z-20 hidden h-14 items-center justify-between gap-2 border-b border-line bg-surface px-6 lg:flex'>
           <button
-            className="flex items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-muted transition-colors hover:text-ink"
+            className='flex items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-muted transition-colors hover:text-ink'
             onClick={() => setSpotlightOpen(true)}
-            type="button"
+            type='button'
           >
-            <Search aria-hidden className="h-3.5 w-3.5" />
-            <span className="text-xs">{t("shell.searchPlaceholder")}</span>
-            <kbd className="ml-1 rounded border border-line bg-surface-2 px-1 font-mono text-[10px]">
+            <Search aria-hidden className='h-3.5 w-3.5' />
+            <span className='text-xs'>{t("shell.searchPlaceholder")}</span>
+            <kbd className='ml-1 rounded border border-line bg-surface-2 px-1 font-mono text-[10px]'>
               ⌘K
             </kbd>
           </button>
 
-          <div className="flex items-center gap-1">
+          <div className='flex items-center gap-1'>
             <GoogleDriveSyncShortcut />
             <QuickSettings />
             <UserAvatar />
@@ -292,8 +356,8 @@ export function AppShell() {
         </div>
 
         {error ? (
-          <div className="mx-auto max-w-5xl px-4 pt-4">
-            <div className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">
+          <div className='mx-auto max-w-5xl px-4 pt-4'>
+            <div className='rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger'>
               {error}
             </div>
           </div>
@@ -301,15 +365,64 @@ export function AppShell() {
         <Outlet />
       </main>
 
-      {/* FAB */}
-      <button
-        aria-label={t("shell.quickAddFab")}
-        className="fixed bottom-20 right-4 z-30 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl active:scale-95 lg:bottom-6"
-        onClick={() => setQuickAddOpen(true)}
-        type="button"
-      >
-        <Plus aria-hidden className="h-5 w-5" />
-      </button>
+      {/* Quick-add FAB */}
+      <div className='fixed bottom-20 right-4 z-30 flex flex-col items-end gap-2 lg:bottom-6'>
+        <div
+          className={cn(
+            "flex flex-col items-end gap-2 transition-all duration-200 ease-out",
+            quickAddMenuOpen
+              ? "translate-y-0 opacity-100"
+              : "pointer-events-none translate-y-2 opacity-0",
+          )}
+        >
+          {quickAddActions.map(action => {
+            const Icon = action.icon
+            return (
+              <button
+                key={action.kind === "transaction" ? action.type : action.kind}
+                className='group inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-3 text-sm font-medium text-ink shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-surface-2 hover:text-primary hover:shadow-md active:translate-y-0'
+                onClick={() =>
+                  action.kind === "transaction"
+                    ? openQuickAdd(action.type)
+                    : openSlipUpload()
+                }
+                type='button'
+              >
+                <span>{action.label}</span>
+                <span className='inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/8 text-primary transition-colors group-hover:bg-primary group-hover:text-white'>
+                  <Icon aria-hidden className='h-3.5 w-3.5' />
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <button
+          aria-expanded={quickAddMenuOpen}
+          aria-label={t("shell.quickAddFab")}
+          className='relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-xl active:scale-95'
+          onClick={() => setQuickAddMenuOpen(open => !open)}
+          type='button'
+        >
+          <Plus
+            aria-hidden
+            className={cn(
+              "absolute h-5 w-5 transition-all duration-200 ease-out",
+              quickAddMenuOpen
+                ? "rotate-90 scale-0 opacity-0"
+                : "rotate-0 scale-100 opacity-100",
+            )}
+          />
+          <X
+            aria-hidden
+            className={cn(
+              "absolute h-5 w-5 transition-all duration-200 ease-out",
+              quickAddMenuOpen
+                ? "rotate-0 scale-100 opacity-100"
+                : "-rotate-90 scale-0 opacity-0",
+            )}
+          />
+        </button>
+      </div>
 
       {/* More drawer backdrop */}
       <div
@@ -328,23 +441,25 @@ export function AppShell() {
           moreOpen ? "translate-y-0" : "translate-y-full",
         )}
       >
-        <div className="flex justify-center pb-1 pt-3">
-          <div className="h-1 w-10 rounded-full bg-ink/20" />
+        <div className='flex justify-center pb-1 pt-3'>
+          <div className='h-1 w-10 rounded-full bg-ink/20' />
         </div>
-        <div className="grid grid-cols-5 gap-1 px-4 pb-6 pt-3">
+        <div className='grid grid-cols-5 gap-1 px-4 pb-6 pt-3'>
           {secondaryNavItems.map(({ href, label, icon: Icon }) => (
             <NavLink
               key={href}
               className={({ isActive }) =>
                 cn(
                   "flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-[11px] font-medium transition-colors",
-                  isActive ? "bg-primary/8 text-primary" : "text-muted hover:bg-ink/5 hover:text-ink",
+                  isActive
+                    ? "bg-primary/8 text-primary"
+                    : "text-muted hover:bg-ink/5 hover:text-ink",
                 )
               }
               end={href === "/"}
               to={href}
             >
-              <Icon aria-hidden className="h-5 w-5" />
+              <Icon aria-hidden className='h-5 w-5' />
               <span>{label}</span>
             </NavLink>
           ))}
@@ -354,9 +469,9 @@ export function AppShell() {
       {/* Mobile nav */}
       <nav
         aria-label={t("shell.mobileNav")}
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-bg px-1 py-1 lg:hidden"
+        className='fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-bg px-1 py-1 lg:hidden'
       >
-        {primaryNavItems.map((item) => (
+        {primaryNavItems.map(item => (
           <MobileNavItem key={item.href} {...item} />
         ))}
         <button
@@ -365,99 +480,123 @@ export function AppShell() {
             "flex min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors",
             isSecondaryActive || moreOpen ? "text-primary" : "text-muted",
           )}
-          onClick={() => setMoreOpen((v) => !v)}
-          type="button"
+          onClick={() => setMoreOpen(v => !v)}
+          type='button'
         >
-          <MoreHorizontal aria-hidden className="h-4 w-4" />
-          <span className="w-full truncate text-center">{t("shell.menus")}</span>
+          <MoreHorizontal aria-hidden className='h-4 w-4' />
+          <span className='w-full truncate text-center'>
+            {t("shell.menus")}
+          </span>
         </button>
       </nav>
 
       <Dialog
+        closeOnOutsideClick={false}
         description={t("shell.quickAddDesc")}
-        onOpenChange={setQuickAddOpen}
+        onOpenChange={open => {
+          setQuickAddOpen(open)
+          if (!open) setQuickAddMenuOpen(false)
+        }}
         open={quickAddOpen}
         title={t("shell.quickAddTitle")}
       >
-        <TransactionForm onSaved={() => setQuickAddOpen(false)} />
+        <TransactionForm
+          key={`${quickAddType}-${quickAddScannerOpen ? "scanner" : "manual"}`}
+          initialScannerOpen={quickAddScannerOpen}
+          initialType={quickAddType}
+          onSaved={() => setQuickAddOpen(false)}
+        />
       </Dialog>
 
-      <SpotlightSearch onClose={() => setSpotlightOpen(false)} open={spotlightOpen} />
+      <SpotlightSearch
+        onClose={() => setSpotlightOpen(false)}
+        open={spotlightOpen}
+      />
 
       <OnboardingModal
         open={initialized && onboardingOpen}
         onDone={() => {
           try {
-            localStorage.setItem("finora-onboarded", "1");
+            localStorage.setItem("finora-onboarded", "1")
           } catch {
             // ignore
           }
-          setOnboardingOpen(false);
+          setOnboardingOpen(false)
         }}
       />
     </div>
-  );
+  )
 }
 
 function QuickSettings() {
-  const { t } = useTranslation();
-  const settings = useFinanceStore((state) => state.settings);
-  const updateSettings = useFinanceStore((state) => state.updateSettings);
-  const currentLang = i18n.language ?? "en";
+  const { t } = useTranslation()
+  const settings = useFinanceStore(state => state.settings)
+  const updateSettings = useFinanceStore(state => state.updateSettings)
+  const currentLang = i18n.language ?? "en"
 
   const ThemeIcon =
-    settings.theme === "light" ? Sun : settings.theme === "dark" ? Moon : Monitor;
+    settings.theme === "light"
+      ? Sun
+      : settings.theme === "dark"
+        ? Moon
+        : Monitor
 
   function cycleTheme() {
-    const idx = THEME_CYCLE.indexOf(settings.theme as AppTheme);
-    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
-    void updateSettings({ ...settings, theme: next });
+    const idx = THEME_CYCLE.indexOf(settings.theme as AppTheme)
+    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length]
+    void updateSettings({ ...settings, theme: next })
   }
 
   async function toggleLang() {
-    const next = currentLang === "en" ? "th" : "en";
-    await i18n.changeLanguage(next);
+    const next = currentLang === "en" ? "th" : "en"
+    await i18n.changeLanguage(next)
     try {
-      localStorage.setItem("finora-lang", next);
+      localStorage.setItem("finora-lang", next)
     } catch {
       // ignore
     }
-    const locale = LANG_TO_LOCALE[next] ?? "en-US";
-    void updateSettings({ ...settings, locale });
+    const locale = LANG_TO_LOCALE[next] ?? "en-US"
+    void updateSettings({ ...settings, locale })
   }
 
   return (
-    <div aria-label={t("shell.quickSettings")} className="flex items-center gap-0.5" role="group">
+    <div
+      aria-label={t("shell.quickSettings")}
+      className='flex items-center gap-0.5'
+      role='group'
+    >
       {/* Theme cycle */}
       <button
         aria-label={t("shell.themeToggle")}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink"
+        className='flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink'
         onClick={cycleTheme}
-        type="button"
+        type='button'
       >
-        <ThemeIcon aria-hidden className="h-4 w-4" />
+        <ThemeIcon aria-hidden className='h-4 w-4' />
       </button>
 
       {/* Language toggle */}
       <button
         aria-label={t("shell.switchLang")}
-        className="flex h-8 items-center rounded-lg px-2 font-mono text-xs font-medium text-muted transition-colors hover:bg-ink/5 hover:text-ink"
+        className='flex h-8 items-center rounded-lg px-2 font-mono text-xs font-medium text-muted transition-colors hover:bg-ink/5 hover:text-ink'
         onClick={() => void toggleLang()}
-        type="button"
+        type='button'
       >
         {currentLang === "th" ? "TH" : "EN"}
       </button>
 
       {/* Currency select */}
       <Select
-        onValueChange={(value) => void updateSettings({ ...settings, currency: value })}
+        onValueChange={value =>
+          void updateSettings({ ...settings, currency: value })
+        }
         value={settings.currency}
       >
-        <SelectTrigger className="h-8 w-auto gap-1 border-transparent bg-transparent px-2 shadow-none text-xs font-medium text-muted hover:bg-ink/5 hover:text-ink focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3">
+        <SelectTrigger className='h-8 w-auto gap-1 border-transparent bg-transparent px-2 shadow-none text-xs font-medium text-muted hover:bg-ink/5 hover:text-ink focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3'>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent align="end">
-          {QUICK_CURRENCIES.map((code) => (
+        <SelectContent align='end'>
+          {QUICK_CURRENCIES.map(code => (
             <SelectItem key={code} value={code}>
               {code}
             </SelectItem>
@@ -465,30 +604,30 @@ function QuickSettings() {
         </SelectContent>
       </Select>
     </div>
-  );
+  )
 }
 
 function UserAvatar() {
-  const { t } = useTranslation();
-  const username = useFinanceStore((state) => state.settings.username ?? "");
+  const { t } = useTranslation()
+  const username = useFinanceStore(state => state.settings.username ?? "")
 
   const initials = username.trim()
     ? username
         .trim()
         .split(/\s+/)
         .slice(0, 2)
-        .map((w) => w[0]?.toUpperCase() ?? "")
+        .map(w => w[0]?.toUpperCase() ?? "")
         .join("")
-    : t("shell.lw");
+    : t("shell.lw")
 
   return (
     <div
-      className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary"
+      className='ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary'
       title={username.trim() || t("shell.localWorkspace")}
     >
       {initials}
     </div>
-  );
+  )
 }
 
 function NavItem({
@@ -497,10 +636,10 @@ function NavItem({
   icon: Icon,
   isCollapsed,
 }: {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  isCollapsed: boolean;
+  href: string
+  label: string
+  icon: typeof LayoutDashboard
+  isCollapsed: boolean
 }) {
   return (
     <NavLink
@@ -517,10 +656,10 @@ function NavItem({
       title={isCollapsed ? label : undefined}
       to={href}
     >
-      <Icon aria-hidden className="h-4 w-4 shrink-0" />
+      <Icon aria-hidden className='h-4 w-4 shrink-0' />
       {!isCollapsed && label}
     </NavLink>
-  );
+  )
 }
 
 function MobileNavItem({
@@ -528,9 +667,9 @@ function MobileNavItem({
   label,
   icon: Icon,
 }: {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
+  href: string
+  label: string
+  icon: typeof LayoutDashboard
 }) {
   return (
     <NavLink
@@ -543,8 +682,8 @@ function MobileNavItem({
       end={href === "/"}
       to={href}
     >
-      <Icon aria-hidden className="h-4 w-4" />
-      <span className="w-full truncate text-center">{label}</span>
+      <Icon aria-hidden className='h-4 w-4' />
+      <span className='w-full truncate text-center'>{label}</span>
     </NavLink>
-  );
+  )
 }

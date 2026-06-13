@@ -47,13 +47,15 @@ export function matchSlip(
   if (suffixes.length >= 2) {
     const sender = matchAccountBySuffix(suffixes[0], accounts);
     const receiver = matchAccountBySuffix(suffixes[1], accounts);
-    if (sender && receiver && sender.id !== receiver.id) {
-      result.type = "transfer";
-      result.fromAccountId = sender.id;
-      result.toAccountId = receiver.id;
-      return result;
+    // Two suffixes → structural transfer, regardless of whether accounts are stored.
+    result.type = "transfer";
+    result.fromAccountId = sender?.id;
+    result.toAccountId = receiver?.id;
+    // If both sides match the same account, clear the ambiguous side.
+    if (result.fromAccountId && result.fromAccountId === result.toAccountId) {
+      result.toAccountId = undefined;
     }
-    if (sender) result.accountId = sender.id;
+    return result;
   } else if (suffixes.length === 1) {
     const matched = matchAccountBySuffix(suffixes[0], accounts);
     if (matched) result.accountId = matched.id;

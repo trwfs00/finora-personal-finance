@@ -118,6 +118,7 @@ export const accountSchema = z.object({
   creditLimit: z.coerce.number().nonnegative().optional(),
   currency: z.string().min(1),
   color: z.string().optional(),
+  accountNumber: z.string().optional(),
   includeInNetWorth: z.boolean(),
   createdAt: isoDateSchema,
   updatedAt: isoDateSchema,

@@ -189,7 +189,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         set(data);
       }
     } catch (e) {
-      console.error("generateDueRecurring failed", e);
+      set({
+        error:
+          e instanceof Error
+            ? e.message
+            : "Failed to generate due recurring transactions",
+      });
     }
   },
   updateSettings: async (settings) => {
