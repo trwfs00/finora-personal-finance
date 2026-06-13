@@ -1,3 +1,5 @@
+import type { MobileNavItemId } from "./navigation";
+
 export type TransactionType = "income" | "expense" | "transfer";
 
 export type DebtType =
@@ -151,6 +153,7 @@ export interface AppSettings {
   backupReminderFrequency: "weekly" | "monthly";
   mrrRates?: Record<string, number>;
   accountOrder?: string[];
+  mobileNavItems?: MobileNavItemId[];
 }
 
 export type SyncStatus =

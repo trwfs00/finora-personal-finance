@@ -1,5 +1,6 @@
 import { createBackup } from "../domain/backup";
 import { DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES, DEFAULT_SETTINGS, SCHEMA_VERSION } from "../domain/defaults";
+import { normalizeMobileNavItems } from "../domain/navigation";
 import {
   accountSchema,
   budgetSchema,
@@ -133,7 +134,11 @@ export async function getFinanceData(): Promise<FinanceData> {
     recurringTransactions,
     savingsGoals,
     debts,
-    settings: settingsRecord?.value ?? DEFAULT_SETTINGS,
+    settings: {
+      ...DEFAULT_SETTINGS,
+      ...(settingsRecord?.value ?? {}),
+      mobileNavItems: normalizeMobileNavItems(settingsRecord?.value?.mobileNavItems),
+    },
     demoLoaded: Boolean(demoRecord?.value),
   };
 }
@@ -423,7 +428,11 @@ export async function addContribution(id: string, amount: number) {
 }
 
 export async function updateSettings(settings: AppSettings) {
-  const value = settingsSchema.parse(settings);
+  const value = settingsSchema.parse({
+    ...DEFAULT_SETTINGS,
+    ...settings,
+    mobileNavItems: normalizeMobileNavItems(settings.mobileNavItems),
+  });
   await db.settings.put({ id: APP_SETTINGS_ID, value });
   await bumpLocalRevision();
   return value;

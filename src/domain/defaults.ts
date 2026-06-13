@@ -1,3 +1,4 @@
+import { DEFAULT_MOBILE_NAV_ITEMS } from "./navigation";
 import type { Account, AppSettings, Category } from "./types";
 
 const now = "2026-01-01T00:00:00.000Z";
@@ -12,6 +13,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   numberFormat: "en-TH",
   backupReminder: true,
   backupReminderFrequency: "monthly",
+  mobileNavItems: DEFAULT_MOBILE_NAV_ITEMS,
 };
 
 const incomeNames = ["Salary", "Freelance", "Bonus", "Investment", "Gift", "Other Income"];
