@@ -369,12 +369,12 @@ export function AppShell() {
       </main>
 
       {/* Quick-add FAB */}
-      <div className='fixed bottom-20 right-4 z-30 flex flex-col items-end gap-2 lg:bottom-6'>
+      <div className='pointer-events-none fixed bottom-20 right-4 z-30 flex flex-col items-end gap-2 lg:bottom-6'>
         <div
           className={cn(
             "flex flex-col items-end gap-2 transition-all duration-200 ease-out",
             quickAddMenuOpen
-              ? "translate-y-0 opacity-100"
+              ? "pointer-events-auto translate-y-0 opacity-100"
               : "pointer-events-none translate-y-2 opacity-0",
           )}
         >
@@ -402,7 +402,7 @@ export function AppShell() {
         <button
           aria-expanded={quickAddMenuOpen}
           aria-label={t("shell.quickAddFab")}
-          className='relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-xl active:scale-95'
+          className='pointer-events-auto relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-xl active:scale-95'
           onClick={() => setQuickAddMenuOpen(open => !open)}
           type='button'
         >
