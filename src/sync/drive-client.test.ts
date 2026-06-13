@@ -12,6 +12,7 @@ const backup = createBackup({
   budgets: [],
   recurringTransactions: [],
   savingsGoals: [],
+  debts: [],
   settings: DEFAULT_SETTINGS,
 });
 

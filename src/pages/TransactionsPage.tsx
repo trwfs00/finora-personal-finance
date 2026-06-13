@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { TransactionForm } from "../components/TransactionForm";
+import { Tooltip } from "../components/ui/tooltip";
 import { HelpButton } from "../components/help/HelpButton";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -377,25 +378,29 @@ export function TransactionsPage() {
                     {formatCurrency(transaction.amount, settings)}
                   </div>
                   <div className="flex justify-end gap-1">
-                    <Button
-                      aria-label={t("transactions.editTx")}
-                      onClick={() => {
-                        setEditing(transaction);
-                        setDialogOpen(true);
-                      }}
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <Pencil aria-hidden className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      aria-label={t("transactions.deleteTx")}
-                      onClick={() => setPendingDelete(transaction)}
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <Trash2 aria-hidden className="h-4 w-4" />
-                    </Button>
+                    <Tooltip label={t("transactions.editTx")}>
+                      <Button
+                        aria-label={t("transactions.editTx")}
+                        onClick={() => {
+                          setEditing(transaction);
+                          setDialogOpen(true);
+                        }}
+                        size="icon"
+                        variant="ghost"
+                      >
+                        <Pencil aria-hidden className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip label={t("transactions.deleteTx")}>
+                      <Button
+                        aria-label={t("transactions.deleteTx")}
+                        onClick={() => setPendingDelete(transaction)}
+                        size="icon"
+                        variant="ghost"
+                      >
+                        <Trash2 aria-hidden className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
                   </div>
                 </div>
               ))}
