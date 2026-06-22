@@ -8,11 +8,13 @@ export function formatCurrency(
     currency: "THB",
     locale: "en-TH",
   },
+  fractionDigits = 0,
 ) {
   return new Intl.NumberFormat(settings.locale, {
     style: "currency",
     currency: settings.currency,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   }).format(value);
 }
 
