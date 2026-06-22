@@ -47,12 +47,23 @@ export function matchSlip(
   if (suffixes.length >= 2) {
     const sender = matchAccountBySuffix(suffixes[0], accounts);
     const receiver = matchAccountBySuffix(suffixes[1], accounts);
-    // Two suffixes → structural transfer, regardless of whether accounts are stored.
-    result.type = "transfer";
     result.fromAccountId = sender?.id;
     result.toAccountId = receiver?.id;
     // If both sides match the same account, clear the ambiguous side.
     if (result.fromAccountId && result.fromAccountId === result.toAccountId) {
+      result.toAccountId = undefined;
+    }
+    const hasConfiguredNumbers = accounts.some(a => !!a.accountNumber);
+    const bothMatched = !!result.fromAccountId && !!result.toAccountId;
+    if (bothMatched || !hasConfiguredNumbers) {
+      // Both sides resolved, or user hasn't configured account numbers yet
+      // (matching is impossible so we defer to the user to fix manually).
+      result.type = "transfer";
+    } else {
+      // Only one side (or neither) matched a known account — don't treat as
+      // transfer. Promote the matched side to a plain accountId instead.
+      result.accountId = result.fromAccountId ?? result.toAccountId;
+      result.fromAccountId = undefined;
       result.toAccountId = undefined;
     }
     return result;

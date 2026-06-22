@@ -58,7 +58,7 @@ function CreditPanel({
   t: ReturnType<typeof useTranslation>["t"];
 }) {
   const credit = calculateCreditUsage(balance, creditLimit);
-  const fmt = (n: number) => formatCurrency(n, { ...settings, currency: account.currency });
+  const fmt = (n: number) => formatCurrency(n, { ...settings, currency: account.currency }, 2);
   return (
     <div className="mt-4 rounded-xl border border-line bg-surface-2 p-3">
       <div className="grid grid-cols-3 gap-2 text-xs">
@@ -167,11 +167,11 @@ function SortableAccountCard({
         </div>
       </div>
       <p className="mt-6 text-2xl font-semibold tabular text-ink">
-        {formatCurrency(balance, { ...settings, currency: account.currency })}
+        {formatCurrency(balance, { ...settings, currency: account.currency }, 2)}
       </p>
       <p className="mt-1 text-sm text-muted">
         {t("accounts.initialBalance", {
-          amount: formatCurrency(account.initialBalance, { ...settings, currency: account.currency }),
+          amount: formatCurrency(account.initialBalance, { ...settings, currency: account.currency }, 2),
         })}
       </p>
       {(account.type === "credit_card" || account.type === "debt") && account.creditLimit ? (
