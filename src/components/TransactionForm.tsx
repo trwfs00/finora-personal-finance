@@ -217,13 +217,18 @@ export function TransactionForm({
     // racing async validations). reset() writes the complete state at once, so
     // the transfer fields are already present when they render.
     const current = form.getValues()
-    const isTransfer = data.type === "transfer"
+    const accountIds = new Set(accounts.map(a => a.id))
+    const bothAccountsMatched =
+      !!data.fromAccountId && accountIds.has(data.fromAccountId) &&
+      !!data.toAccountId   && accountIds.has(data.toAccountId)
+    const resolvedType =
+      bothAccountsMatched ? "transfer"
+      : data.type ?? (current.type === "transfer" ? "expense" : current.type)
+    const isTransfer = resolvedType === "transfer"
 
     form.reset({
       ...current,
-      type:
-        (data.fromAccountId && data.toAccountId ? "transfer" : data.type) ||
-        (current.type === "transfer" ? "expense" : current.type),
+      type: resolvedType,
       amount: data.amount ?? current.amount,
       date: data.date ?? current.date,
       time: data.time ?? current.time,
